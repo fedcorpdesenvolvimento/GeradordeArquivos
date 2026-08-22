@@ -1,0 +1,11 @@
+# NUNCA subir credenciais (senhas do Firebird e do SFTP)
+config.py
+
+# preferencias locais da tela
+porto_assistencia.json
+
+# saidas geradas e temporarios
+saida/
+*.xlsx
+__pycache__/
+*.pyc
