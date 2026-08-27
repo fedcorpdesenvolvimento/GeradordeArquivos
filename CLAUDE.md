@@ -14,10 +14,17 @@ atualizada a cada mudança: ela é o material dos futuros programadores.
   cada módulo é uma `CTkToplevel` aberta pelo menu (`main.py`). Comentários
   e identificadores em português.
 - **Conexão**: sempre via `db.conectar()` (nunca `fdb.connect` direto).
-  O `config.py`+`db.py` serão substituídos por um hub de conexão quando o
-  sistema maior existir — os módulos não devem depender de detalhes da conexão.
-  Firebird 2.5 em 192.168.0.6, `FATURA.GDB`. Charset: Vida usa ASCII
-  (comportamento herdado validado), Porto Assistência usa WIN1252.
+  Desde 27/08/2026 segue o modelo do **FedHub-Backend** (repo privado
+  `Fedcorp-Desenvolvimentos/FedHub-Backend`): credenciais no `.env`
+  (variáveis `FB_*`, mesmos nomes do FedHub; nunca commitar) e pool de
+  conexões em `db.py` (um pool por charset). Os módulos não devem depender
+  de detalhes da conexão. Firebird 2.5 em 192.168.0.6, `FATURA.GDB`.
+  Charset: Vida usa ASCII (comportamento herdado validado), Porto
+  Assistência usa WIN1252.
+- **Rumo web**: decisão de 27/08/2026 — todos os módulos (inclusive os
+  placeholders Dental) migrarão para o FedHub-Backend como módulo FastAPI,
+  com página simples servida pelo próprio backend. Este desktop continua
+  em uso até a versão web ser validada.
 - **SUBGRUPOS DE VIDA**: lógica migrada intacta de
   `U:\--2021\02-gerador_planilhas_firebird\main.py` — não "melhorar" queries
   nem fluxo sem o usuário pedir.

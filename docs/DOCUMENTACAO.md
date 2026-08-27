@@ -13,10 +13,13 @@ Porto Seguro. Hoje tem dois módulos:
 | **SUBGRUPOS DE VIDA** | Gerar o relatório Excel de segurados de Vida por subgrupo/vigência e conferir inconsistências de apólices sem subgrupo. |
 | **PORTO ASSISTÊNCIA** | Gerar a relação mensal de segurados dos produtos Residencial (1), Auto (2) e Empresarial (3) e enviá-la por SFTP para a Porto Seguro. |
 
-Estes módulos farão parte de um sistema maior no futuro, quando a conexão
-com o banco passará por um **hub** central. Por enquanto a conexão fica em
-`db.py` + `config.py` — os módulos já chamam `db.conectar()`, então trocar
-para o hub não exigirá mudanças neles.
+Estes módulos migrarão no futuro para o **FedHub-Backend**
+(github.com/Fedcorp-Desenvolvimentos/FedHub-Backend), rodando na web como
+um módulo FastAPI (decisão do usuário, 08/2026: migrar tudo — inclusive os
+placeholders Dental — com uma página simples servida pelo próprio backend).
+Como preparação, a camada de conexão local já foi alinhada ao modelo do
+FedHub (ver §6): credenciais em `.env` e pool de conexões em `db.py`. Os
+módulos chamam `db.conectar()` e não dependem de detalhes da conexão.
 
 ## 2. Como rodar
 
@@ -36,8 +39,10 @@ máquina — já presente nas estações que rodam os sistemas Delphi.
 ```
 04-EnvioPorto\
 │  main.py                  ← menu principal (ponto de entrada)
-│  config.py                ← DB_CONFIG (Firebird) e SFTP_CONFIG (Porto)
-│  db.py                    ← db.conectar() — futuro ponto de troca p/ hub
+│  .env                     ← credenciais reais (NÃO versionar/copiar)
+│  .env.exemplo             ← modelo do .env para clones novos
+│  config.py                ← lê o .env e monta DB_CONFIG / SFTP_CONFIG
+│  db.py                    ← db.conectar() com pool (modelo FedHub)
 │  requirements.txt
 │  porto_assistencia.json   ← preferências da tela (criado no 1º uso)
 │
@@ -153,7 +158,7 @@ para a janela não travar; o log é entregue por `queue.Queue`.
 - **DNS:** a rede local não resolve o hostname. O código testa o DNS e,
   se falhar, usa o IP de fallback (`131.161.97.122`, resolvido via DNS
   público — alias `mft.lb.portoseguro.com.br`). Se a Porto trocar o IP um
-  dia, atualizar `host_fallback_ip` no `config.py` (resolver com
+  dia, atualizar `SFTP_FALLBACK_IP` no `.env` (resolver com
   `nslookup sftp.portoseguro.com.br 8.8.8.8`).
 - O upload sobe como `arquivo.part`, confere o tamanho e só então renomeia
   para o nome final — a Porto nunca vê arquivo incompleto. Qualquer falha
@@ -165,16 +170,28 @@ Queries reais instaladas e testadas contra o banco em 21/08/2026 (amostra
 de 5 linhas por produto conferida contra a planilha manual de referência
 `U:\PORTO SEGURO VIDA\relacao-envio-porto-042026.xlsx` — layout idêntico).
 
-## 6. Banco de dados
+## 6. Banco de dados e camada de conexão
 
 - Firebird **2.5** em `192.168.0.6`, arquivo `E:\SISTEMA\BASE_CHEQUE\BASE\FATURA.GDB`
   (mesmo banco dos sistemas Delphi legados).
-- Credenciais em `config.py` (`DB_CONFIG`). **Não commitar este arquivo em
-  repositório público**; no sistema maior as credenciais sairão do código
-  (hub de conexão).
+- **Credenciais no `.env`** (27/08/2026 — modelo alinhado ao FedHub-Backend,
+  `src/shared/database/connection_firebird.py` + `settings.py`). Os nomes
+  das variáveis Firebird são os mesmos do FedHub (`FB_HOST`, `FB_PORT`,
+  `FB_DATABASE`, `FB_USER`, `FB_PASSWORD`), para o mesmo `.env` servir na
+  migração futura. O `config.py` (sem segredos) lê o `.env` e continua
+  exportando `DB_CONFIG`/`SFTP_CONFIG` — a interface para os módulos não
+  mudou. Variável ausente derruba o boot com mensagem clara (sem defaults
+  para credenciais). Clone novo: `copy .env.exemplo .env` e preencher.
+  **O `.env` está no `.gitignore` — nunca commitar.**
+- **Pool de conexões** em `db.py`, copiado do FedHub: conexões ociosas
+  ficam retidas (até `FB_POOL_SIZE`, padrão 5) e são reaproveitadas;
+  `close()` devolve ao pool (com rollback) em vez de fechar; conexão ociosa
+  é validada com `SELECT 1 FROM RDB$DATABASE` antes do reuso. Diferença em
+  relação ao FedHub: como aqui os módulos usam charsets diferentes, existe
+  **um pool por charset**.
 - Charset: módulo Vida usa `ASCII` (comportamento herdado e validado);
   Porto Assistência usa `WIN1252`. `db.conectar(charset=...)` permite a
-  escolha por chamada.
+  escolha por chamada; o padrão vem de `FB_CHARSET` no `.env`.
 
 ## 7. Módulos planejados
 
@@ -194,6 +211,15 @@ aguardando o código, que seguirá o mesmo padrão dos módulos existentes:
 
 ## 9. Histórico
 
+- **27/08/2026** — Camada de conexão alinhada ao FedHub-Backend: credenciais
+  movidas do `config.py` para o `.env` (variáveis com os nomes do FedHub) e
+  `db.py` ganhou pool de conexões por charset. `config_exemplo.py` deu lugar
+  ao `.env.exemplo`. Interface `db.conectar()` inalterada — nenhum módulo
+  precisou mudar. Decisão de rumo: migrar todos os módulos (inclusive os
+  placeholders Dental) para o FedHub-Backend, com página simples servida
+  pelo próprio backend.
+- **26/08/2026** — Abas Código 2 e Código 3 do Porto Assistência igualadas
+  ao layout de 12 colunas do Código 1 (a pedido do usuário).
 - **21/08/2026** — Primeira versão do sistema unificado. SUBGRUPOS DE VIDA
   migrado de `02-gerador_planilhas_firebird`; PORTO ASSISTÊNCIA criado a
   partir do protótipo `Base_Cheque\Envio de Layout\sftp-porto` (onde a

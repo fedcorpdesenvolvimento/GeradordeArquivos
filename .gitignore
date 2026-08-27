@@ -1,5 +1,5 @@
 # NUNCA subir credenciais (senhas do Firebird e do SFTP)
-config.py
+.env
 
 # preferencias locais da tela
 porto_assistencia.json
