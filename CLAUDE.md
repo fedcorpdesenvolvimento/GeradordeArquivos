@@ -39,9 +39,14 @@ atualizada a cada mudança: ela é o material dos futuros programadores.
   verificação de tamanho + rename. Nunca enviar arquivo de teste para
   `/Porto/Remessa` sem o usuário confirmar — tudo que cai lá pode ser
   processado pela seguradora.
-- **Módulos planejados** (botões placeholder no menu): GERA PORTO DENTAL e
-  GERAR DENTAL SEMPRE ODONTO — código entra depois, no mesmo padrão
-  (ver DOCUMENTACAO.md §7 "Como adicionar um novo módulo").
+- **GERA PORTO DENTAL**: implementado em 27/08/2026 — fluxo de DUAS etapas
+  obrigatórias: consultar (query 1, :inivig → log + total de vidas) libera
+  o botão de gerar (query 2 alimentada pelas faturas da query 1 via
+  marcador :faturas). Planilha `portodental-MMYYYY.xlsx` no formato exato
+  da query 2. Queries reais em `queries/portodental_*.sql` (instaladas e
+  testadas em 27/08/2026). Ver DOCUMENTACAO.md §7.
+- **Módulo planejado** (botão placeholder no menu): GERAR DENTAL SEMPRE
+  ODONTO — código entra depois, no mesmo padrão.
 
 ## Como rodar / testar
 

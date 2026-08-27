@@ -20,6 +20,7 @@ placeholders Dental — com uma página simples servida pelo próprio backend).
 Como preparação, a camada de conexão local já foi alinhada ao modelo do
 FedHub (ver §6): credenciais em `.env` e pool de conexões em `db.py`. Os
 módulos chamam `db.conectar()` e não dependem de detalhes da conexão.
+O passo a passo da migração web está em `docs/PLANO-WEB.md`.
 
 ## 2. Como rodar
 
@@ -193,13 +194,37 @@ de 5 linhas por produto conferida contra a planilha manual de referência
   Porto Assistência usa `WIN1252`. `db.conectar(charset=...)` permite a
   escolha por chamada; o padrão vem de `FB_CHARSET` no `.env`.
 
-## 7. Módulos planejados
+## 7. Módulo GERA PORTO DENTAL (`modulos/porto_dental.py` + `modulos/gerador_dental.py`)
 
-Já têm botão no menu (desabilitados com aviso "em desenvolvimento"),
-aguardando o código, que seguirá o mesmo padrão dos módulos existentes:
+Spec completa (requisitos EARS com evidências, ajustes das queries e
+validação): `docs/SPEC-PORTO-DENTAL.md`.
 
-- **GERA PORTO DENTAL**
-- **GERAR DENTAL SEMPRE ODONTO**
+Fluxo em **duas etapas com ordem obrigatória** (decisão do usuário, 08/2026):
+
+1. **Consultar Vidas** — o usuário define a pasta e a vigência (calendário
+   pré-preenchido com o dia 01 do mês anterior) e roda a **query 1**
+   (`queries/portodental_1.sql`, parâmetro `:inivig`). O log mostra cada
+   linha retornada e o **TOTAL DE VIDAS A ENVIAR**. Contrato da query 1:
+   deve retornar a coluna `FATURA` (alimenta a query 2); se houver coluna
+   `VIDAS`, o totalizador soma essa coluna, senão conta as linhas.
+2. **Gerar Planilha Final** — botão **liberado somente após a consulta**
+   bem-sucedida. A **query 2** (`queries/portodental_2.sql`) roda alimentada
+   pelos números de fatura da etapa 1: o marcador `:faturas` dentro de um
+   `IN` é substituído em blocos de 1.000 (limite do `IN` no Firebird 2.5).
+   A planilha segue **exatamente o formato da query 2** — as colunas do
+   resultado viram o cabeçalho, na ordem da query. Arquivo:
+   `portodental-MMYYYY.xlsx` (competência da vigência), salvo na pasta
+   escolhida (persistida em `porto_dental.json`).
+
+A geração usa a vigência e as faturas **da consulta feita** (mudar o
+calendário depois da etapa 1 não muda a etapa 2 — consulte de novo).
+Conexão charset WIN1252. Queries reais instaladas em 27/08/2026 (fonte:
+usuário; ajustes documentados no cabeçalho de cada `.sql`).
+
+## 7b. Módulos planejados
+
+- **GERAR DENTAL SEMPRE ODONTO** — botão no menu desabilitado com aviso
+  "em desenvolvimento"; seguirá o mesmo padrão.
 
 ## 8. Como adicionar um novo módulo
 
@@ -211,6 +236,14 @@ aguardando o código, que seguirá o mesmo padrão dos módulos existentes:
 
 ## 9. Histórico
 
+- **27/08/2026 (b)** — Módulo GERA PORTO DENTAL implementado (fluxo de duas
+  etapas: consulta com totalizador de vidas → geração liberada depois).
+  Queries reais instaladas e testadas contra o banco na vigência
+  01/07/2026: 20 faturas, 7.080 vidas; amostra de 2 faturas gerou 174
+  linhas — exatamente a soma de qtd_itens das duas (136+38), confirmando
+  o totalizador. Ajustes na query do usuário documentados nos próprios
+  .sql (data fixa → :inivig; "= :FATURA" → "IN (:faturas)";
+  correção do join "VS.seq_mat=VS.seq_mat" → "VS.seq_mat=VSM.seq_mat").
 - **27/08/2026** — Camada de conexão alinhada ao FedHub-Backend: credenciais
   movidas do `config.py` para o `.env` (variáveis com os nomes do FedHub) e
   `db.py` ganhou pool de conexões por charset. `config_exemplo.py` deu lugar

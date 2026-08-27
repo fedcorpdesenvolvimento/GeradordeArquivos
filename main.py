@@ -12,6 +12,7 @@ from tkinter import messagebox
 
 from modulos.subgrupos_vida import JanelaSubgruposVida
 from modulos.porto_assistencia import JanelaPortoAssistencia
+from modulos.porto_dental import JanelaPortoDental
 
 ctk.set_appearance_mode("system")
 ctk.set_default_color_theme("blue")
@@ -37,13 +38,12 @@ class MenuPrincipal(ctk.CTk):
                       fg_color="green", hover_color="darkgreen",
                       command=self.abrir_porto_assistencia).pack(pady=8)
 
-        # --- Módulos planejados (código entra depois, no mesmo padrão) ---
         ctk.CTkButton(self, text="GERA PORTO DENTAL",
                       font=("Arial", 15, "bold"), height=48, width=300,
-                      fg_color="gray40", hover_color="gray30",
-                      command=lambda: self.modulo_em_desenvolvimento(
-                          "GERA PORTO DENTAL")).pack(pady=8)
+                      fg_color="green", hover_color="darkgreen",
+                      command=self.abrir_porto_dental).pack(pady=8)
 
+        # --- Módulos planejados (código entra depois, no mesmo padrão) ---
         ctk.CTkButton(self, text="GERAR DENTAL SEMPRE ODONTO",
                       font=("Arial", 15, "bold"), height=48, width=300,
                       fg_color="gray40", hover_color="gray30",
@@ -64,6 +64,10 @@ class MenuPrincipal(ctk.CTk):
 
     def abrir_porto_assistencia(self):
         janela = JanelaPortoAssistencia(self)
+        janela.focus()
+
+    def abrir_porto_dental(self):
+        janela = JanelaPortoDental(self)
         janela.focus()
 
 
