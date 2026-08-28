@@ -45,8 +45,10 @@ atualizada a cada mudança: ela é o material dos futuros programadores.
   marcador :faturas). Planilha `portodental-MMYYYY.xlsx` no formato exato
   da query 2. Queries reais em `queries/portodental_*.sql` (instaladas e
   testadas em 27/08/2026). Ver DOCUMENTACAO.md §7.
-- **Módulo planejado** (botão placeholder no menu): GERAR DENTAL SEMPRE
-  ODONTO — código entra depois, no mesmo padrão.
+- **GERAR DENTAL SEMPRE ODONTO**: implementado em 28/08/2026 como clone
+  parametrizado do Porto Dental (subclasse trocando atributos de classe):
+  `tipo_dental = 'S'` na query 1, nome SEMPRE ODONTO no título/aba/arquivo
+  (`sempreodonto-MMYYYY.xlsx`). Não há mais módulos placeholder no menu.
 
 ## Como rodar / testar
 

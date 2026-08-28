@@ -4,6 +4,7 @@
 # preferencias locais da tela
 porto_assistencia.json
 porto_dental.json
+sempre_odonto.json
 
 # saidas geradas e temporarios
 saida/

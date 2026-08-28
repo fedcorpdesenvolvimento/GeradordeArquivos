@@ -28,13 +28,24 @@ from modulos import gerador_dental
 from modulos.porto_assistencia import primeiro_dia_mes_anterior
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CONFIG_JSON = os.path.join(BASE_DIR, "porto_dental.json")
 
 
 class JanelaPortoDental(ctk.CTkToplevel):
+    # Parâmetros do produto — a tela GERAR DENTAL SEMPRE ODONTO
+    # (modulos/dental_sempre_odonto.py) herda esta classe trocando só isto.
+    TITULO = "GERA PORTO DENTAL — Consulta e Geração da Planilha"
+    ARQUIVO_CONFIG = "porto_dental.json"
+    QUERY_1 = "portodental_1.sql"
+    QUERY_2 = "portodental_2.sql"
+    PREFIXO_ARQUIVO = "portodental"
+    NOME_ABA = "PORTO DENTAL"
+    COR_BOTAO = "green"           # padrão do sistema (produtos Porto)
+    COR_BOTAO_HOVER = "darkgreen"
+
     def __init__(self, master):
         super().__init__(master)
-        self.title("GERA PORTO DENTAL — Consulta e Geração da Planilha")
+        self.config_json = os.path.join(BASE_DIR, self.ARQUIVO_CONFIG)
+        self.title(self.TITULO)
         self.geometry("720x620")
         self.attributes("-topmost", True)
 
@@ -77,13 +88,13 @@ class JanelaPortoDental(ctk.CTkToplevel):
         fr_botoes.pack(pady=12)
         self.btn_consultar = ctk.CTkButton(
             fr_botoes, text="1) Consultar Vidas", command=self._iniciar_consulta,
-            fg_color="green", hover_color="darkgreen",
+            fg_color=self.COR_BOTAO, hover_color=self.COR_BOTAO_HOVER,
             font=("Arial", 14, "bold"), height=40, width=220)
         self.btn_consultar.pack(side="left", padx=8)
         # liberado somente depois de uma consulta bem-sucedida
         self.btn_gerar = ctk.CTkButton(
             fr_botoes, text="2) Gerar Planilha Final", command=self._iniciar_geracao,
-            fg_color="green", hover_color="darkgreen",
+            fg_color=self.COR_BOTAO, hover_color=self.COR_BOTAO_HOVER,
             font=("Arial", 14, "bold"), height=40, width=220,
             state="disabled")
         self.btn_gerar.pack(side="left", padx=8)
@@ -97,18 +108,18 @@ class JanelaPortoDental(ctk.CTkToplevel):
 
     # ---------- config persistida ----------
     def _carregar_config(self):
-        if not os.path.isfile(CONFIG_JSON):
+        if not os.path.isfile(self.config_json):
             self.var_pasta.set(os.path.join(BASE_DIR, "saida"))
             return
         try:
-            with open(CONFIG_JSON, "r", encoding="utf-8") as f:
+            with open(self.config_json, "r", encoding="utf-8") as f:
                 cfg = json.load(f)
             self.var_pasta.set(cfg.get("pasta", os.path.join(BASE_DIR, "saida")))
         except Exception:
             pass  # config corrompida não impede o uso
 
     def _salvar_config(self):
-        with open(CONFIG_JSON, "w", encoding="utf-8") as f:
+        with open(self.config_json, "w", encoding="utf-8") as f:
             json.dump({"pasta": self.var_pasta.get()}, f,
                       ensure_ascii=False, indent=2)
 
@@ -184,7 +195,7 @@ class JanelaPortoDental(ctk.CTkToplevel):
     def _trabalho_consulta(self, inivig):
         try:
             faturas, total_vidas = gerador_dental.consultar_faturas(
-                inivig, log=self._log)
+                inivig, log=self._log, query_file=self.QUERY_1)
             self.faturas = faturas
             self.inivig_consultado = inivig
             self._log(f"Faturas encontradas: {len(faturas)}")
@@ -225,7 +236,9 @@ class JanelaPortoDental(ctk.CTkToplevel):
     def _trabalho_geracao(self, pasta, inivig, faturas):
         try:
             caminho, linhas = gerador_dental.gerar_planilha(
-                pasta, inivig, faturas, log=self._log)
+                pasta, inivig, faturas, log=self._log,
+                query_file=self.QUERY_2, prefixo=self.PREFIXO_ARQUIVO,
+                aba=self.NOME_ABA)
             self._log(f"Concluído: {linhas} linhas em {caminho}")
         except Exception as e:
             self._log(f"[ERRO] {e}")

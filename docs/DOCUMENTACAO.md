@@ -67,6 +67,14 @@ Origem: era o sistema independente `U:\--2021\02-gerador_planilhas_firebird\main
 Foi trazido para cá como janela filha do menu, com a lógica **intacta** —
 só a classe virou `CTkToplevel` e a conexão passou a vir de `db.conectar()`.
 
+Ajuste de tela a pedido do usuário (28/08/2026): os checkboxes de subgrupo
+mostram o **código entre colchetes** no fim — `NOME DO SUBGRUPO [1234567]`
+(a listagem passou a trazer também a coluna `SUBGRUPO`). É só informação
+visual: antes da busca `WHERE NOME_SUBGRP = ?` o sufixo ` [código]` é
+removido (regex em `processar`), então o critério de geração continua o
+mesmo. Validado contra o banco: os 18 subgrupos resolvem para o código
+correto após a limpeza.
+
 ### Fluxo "Gerar Planilha Excel" (`processar`)
 
 1. Usuário escolhe a **data de vigência** no calendário (pré-preenchida com
@@ -221,10 +229,16 @@ calendário depois da etapa 1 não muda a etapa 2 — consulte de novo).
 Conexão charset WIN1252. Queries reais instaladas em 27/08/2026 (fonte:
 usuário; ajustes documentados no cabeçalho de cada `.sql`).
 
-## 7b. Módulos planejados
+## 7b. Módulo GERAR DENTAL SEMPRE ODONTO (`modulos/dental_sempre_odonto.py`)
 
-- **GERAR DENTAL SEMPRE ODONTO** — botão no menu desabilitado com aviso
-  "em desenvolvimento"; seguirá o mesmo padrão.
+Idêntico ao GERA PORTO DENTAL (decisão do usuário, 28/08/2026): a classe
+`JanelaDentalSempreOdonto` herda `JanelaPortoDental` trocando apenas os
+parâmetros de produto (atributos de classe): título, `sempre_odonto.json`,
+queries `sempreodonto_1.sql`/`sempreodonto_2.sql`, prefixo do arquivo
+(`sempreodonto-MMYYYY.xlsx`) e nome da aba (`SEMPRE ODONTO`). A única
+diferença de SQL é `AP.tipo_dental = 'S'` na query 1 (a query 2 é
+idêntica). O motor é o mesmo `gerador_dental.py`, agora parametrizado
+por `query_file`/`prefixo`/`aba`.
 
 ## 8. Como adicionar um novo módulo
 
@@ -235,6 +249,17 @@ usuário; ajustes documentados no cabeçalho de cada `.sql`).
 4. Documentar o módulo neste arquivo (objetivo, fluxo, tabelas usadas).
 
 ## 9. Histórico
+
+- **28/08/2026** — GERAR DENTAL SEMPRE ODONTO implementado como clone
+  parametrizado do Porto Dental (`tipo_dental = 'S'`; nome SEMPRE ODONTO
+  no título, aba e arquivo). Testado contra o banco (01/07/2026): 236
+  faturas, 41.172 vidas; amostra de 2 faturas (48+4) gerou 52 linhas —
+  fechamento exato. Regressão do Porto Dental confirmada (20/7.080).
+  No mesmo dia: checkboxes do SUBGRUPOS DE VIDA passaram a exibir o
+  código do subgrupo entre colchetes (ver §4); datas nas planilhas
+  (Porto Assistência e Dental) passaram a exibir `DD/MM/YYYY` (helper
+  `celula()` em `gerador_porto.py`). Menu sem placeholders.
+  Spec dos três ajustes: `docs/SPEC-AJUSTES-2026-08-28.md`.
 
 - **27/08/2026 (b)** — Módulo GERA PORTO DENTAL implementado (fluxo de duas
   etapas: consulta com totalizador de vidas → geração liberada depois).

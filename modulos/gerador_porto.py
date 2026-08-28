@@ -12,6 +12,7 @@ import os
 import re
 
 from openpyxl import Workbook
+from openpyxl.cell import WriteOnlyCell
 
 import db
 
@@ -57,6 +58,20 @@ FETCH_BLOCO = 2000   # linhas por leitura no banco (equilíbrio memória x rede)
 
 def _log_padrao(msg, transiente=False):
     print(msg)
+
+
+def celula(ws, valor):
+    """Valor pronto para ws.append: datas saem no formato brasileiro.
+
+    O openpyxl grava datetime com formato ISO (aaaa-mm-dd) por padrão;
+    aqui a célula continua sendo data, mas exibida como DD/MM/YYYY
+    (pedido do usuário, 28/08/2026). Demais valores passam direto.
+    """
+    if isinstance(valor, (datetime.datetime, datetime.date)):
+        c = WriteOnlyCell(ws, value=valor)
+        c.number_format = "DD/MM/YYYY"
+        return c
+    return valor
 
 
 def carregar_query(nome_arquivo: str) -> str:
@@ -138,7 +153,7 @@ def gerar_planilha(destino_pasta: str, inivig: datetime.date, selecao: dict,
                     if not bloco:
                         break
                     for linha in bloco:
-                        ws.append([linha[i] for i in indices])
+                        ws.append([celula(ws, linha[i]) for i in indices])
                     gravadas += len(bloco)
                     log(f"  ... {gravadas} linhas", transiente=True)
                 cur.close()

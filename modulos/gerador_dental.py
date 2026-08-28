@@ -20,7 +20,7 @@ import re
 from openpyxl import Workbook
 
 import db
-from modulos.gerador_porto import carregar_query, _preparar_parametros
+from modulos.gerador_porto import carregar_query, _preparar_parametros, celula
 
 # Limite de itens por IN (o Firebird 2.5 aceita até 1500; folga proposital)
 BLOCO_IN = 1000
@@ -31,13 +31,15 @@ def _log_padrao(msg, transiente=False):
     print(msg)
 
 
-def consultar_faturas(inivig: datetime.date, log=_log_padrao) -> tuple[list, int]:
+def consultar_faturas(inivig: datetime.date, log=_log_padrao,
+                      query_file: str = "portodental_1.sql") -> tuple[list, int]:
     """Etapa 1 — roda a query 1 e devolve (faturas, total_de_vidas).
 
     Loga cada linha retornada. Total de vidas: soma da coluna VIDAS se
-    existir; senão, contagem de linhas.
+    existir; senão, contagem de linhas. query_file permite reusar o motor
+    em outros produtos (ex.: sempreodonto_1.sql).
     """
-    sql = carregar_query("portodental_1.sql")
+    sql = carregar_query(query_file)
     sql, params = _preparar_parametros(sql, inivig)
 
     con = db.conectar(charset="WIN1252")
@@ -47,7 +49,7 @@ def consultar_faturas(inivig: datetime.date, log=_log_padrao) -> tuple[list, int
         nomes = [d[0].strip().upper() for d in cur.description]
         if "FATURA" not in nomes:
             raise RuntimeError(
-                "A query portodental_1.sql precisa retornar uma coluna com "
+                f"A query {query_file} precisa retornar uma coluna com "
                 f"alias FATURA. Colunas retornadas: {nomes}")
         idx_fatura = nomes.index("FATURA")
         idx_vidas = nomes.index("VIDAS") if "VIDAS" in nomes else None
@@ -70,27 +72,32 @@ def consultar_faturas(inivig: datetime.date, log=_log_padrao) -> tuple[list, int
 
 
 def gerar_planilha(destino_pasta: str, inivig: datetime.date, faturas: list,
-                   log=_log_padrao) -> tuple[str, int]:
-    """Etapa 2 — gera o portodental-MMYYYY.xlsx e retorna (caminho, linhas).
+                   log=_log_padrao,
+                   query_file: str = "portodental_2.sql",
+                   prefixo: str = "portodental",
+                   aba: str = "PORTO DENTAL") -> tuple[str, int]:
+    """Etapa 2 — gera o <prefixo>-MMYYYY.xlsx e retorna (caminho, linhas).
 
     A query 2 deve conter o marcador :faturas dentro de um IN; ele é
     substituído pelos números da etapa 1 em blocos de BLOCO_IN (limite do
     IN no Firebird). O cabeçalho da planilha vem das colunas da query.
+    query_file/prefixo/aba permitem reusar o motor em outros produtos
+    (ex.: sempreodonto_2.sql / sempreodonto / SEMPRE ODONTO).
     """
     if not faturas:
         raise ValueError("Nenhuma fatura para gerar — rode a consulta antes.")
     os.makedirs(destino_pasta, exist_ok=True)
     competencia = inivig.strftime("%m%Y")
-    caminho = os.path.join(destino_pasta, f"portodental-{competencia}.xlsx")
+    caminho = os.path.join(destino_pasta, f"{prefixo}-{competencia}.xlsx")
 
-    sql_base = carregar_query("portodental_2.sql")
+    sql_base = carregar_query(query_file)
     if not re.search(r":faturas\b", sql_base, flags=re.IGNORECASE):
         raise RuntimeError(
-            "A query portodental_2.sql precisa conter o marcador :faturas "
+            f"A query {query_file} precisa conter o marcador :faturas "
             "dentro de um IN (ver comentário no próprio arquivo).")
 
     wb = Workbook(write_only=True)
-    ws = wb.create_sheet(title="PORTO DENTAL")
+    ws = wb.create_sheet(title=aba)
     cabecalho_gravado = False
     gravadas = 0
 
@@ -112,7 +119,7 @@ def gerar_planilha(destino_pasta: str, inivig: datetime.date, faturas: list,
                 if not bloco:
                     break
                 for linha in bloco:
-                    ws.append(list(linha))
+                    ws.append([celula(ws, v) for v in linha])
                 gravadas += len(bloco)
                 log(f"  ... {gravadas} linhas", transiente=True)
             cur.close()

@@ -8,6 +8,7 @@ adaptado para rodar como janela do SISTEMA DE ENVIO PORTO SEGURO:
 Toda a lógica de negócio (queries, procedure e geração) está intacta.
 """
 import calendar
+import re
 from datetime import date, datetime, timedelta
 from tkinter import messagebox, ttk, filedialog
 
@@ -73,9 +74,11 @@ class JanelaSubgruposVida(ctk.CTkToplevel):
         try:
             conn = db.conectar()
             cur = conn.cursor()
-            cur.execute("SELECT NOME_SUBGRP FROM SUBGRUPOSEGURADORA ORDER BY NOME_SUBGRP")
+            # O código do subgrupo aparece entre [] no fim, só como informação;
+            # a geração continua buscando pelo nome (o sufixo é removido antes).
+            cur.execute("SELECT NOME_SUBGRP, SUBGRUPO FROM SUBGRUPOSEGURADORA ORDER BY NOME_SUBGRP")
             for row in cur.fetchall():
-                cb = ctk.CTkCheckBox(self.scroll_frame, text=row[0])
+                cb = ctk.CTkCheckBox(self.scroll_frame, text=f"{row[0]} [{row[1]}]")
                 cb.pack(anchor="w", padx=10, pady=5)
                 self.checkboxes.append(cb)
             conn.close()
@@ -178,6 +181,9 @@ class JanelaSubgruposVida(ctk.CTkToplevel):
             id_sub_arquivo = "Varios"  # Valor padrão caso selecione muitos
 
             for nome_sub in selecionados:
+                # remove o sufixo " [código]" exibido no checkbox — a busca
+                # continua sendo pelo nome, como sempre foi
+                nome_sub = re.sub(r"\s*\[[^\]]*\]$", "", nome_sub)
                 cur.execute("SELECT SUBGRUPO FROM SUBGRUPOSEGURADORA WHERE NOME_SUBGRP = ?", (nome_sub,))
                 res_sub = cur.fetchone()
                 if not res_sub:

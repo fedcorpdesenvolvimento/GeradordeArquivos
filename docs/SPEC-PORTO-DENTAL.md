@@ -23,8 +23,17 @@ pelo loop Tk) [E] (`modulos/porto_dental.py`, verificado 2026-08-27).
 **Dentro:** tela `modulos/porto_dental.py`, núcleo `modulos/gerador_dental.py`,
 queries `queries/portodental_1.sql` e `portodental_2.sql`, botão no
 `main.py`. **Fora:** envio da planilha (não há SFTP no fluxo Dental);
-GERAR DENTAL SEMPRE ODONTO (segue placeholder); versão web (spec
-`envio-porto` do FedHub-Backend).
+versão web (spec `envio-porto` do FedHub-Backend).
+
+**Extensão (28/08/2026):** GERAR DENTAL SEMPRE ODONTO implementado como
+clone parametrizado desta spec — `JanelaDentalSempreOdonto` herda
+`JanelaPortoDental` trocando só atributos de classe (queries
+`sempreodonto_*.sql` com `tipo_dental = 'S'`, arquivo
+`sempreodonto-MMYYYY.xlsx`, aba `SEMPRE ODONTO`) [E]
+(`modulos/dental_sempre_odonto.py`, verificado 2026-08-28; consulta na
+vigência 01/07/2026: 236 faturas/41.172 vidas; amostra de 2 faturas
+gerou 52 linhas = 48+4, fechamento exato). Todos os RF/RNF desta spec
+valem para os dois produtos, com os parâmetros de cada um.
 
 ## User Stories e Critérios de Aceitação
 
@@ -49,8 +58,9 @@ de vidas, **para** conferir o volume antes de gerar a planilha.
 
 - **QUANDO** o operador clica em "1) Consultar Vidas", **ENTÃO** o sistema
   **DEVE** executar `queries/portodental_1.sql` com `:inivig` e mostrar no
-  log cada linha retornada (fatura, apólice, administradora, vidas) [E]
-  (`modulos/gerador_dental.py:34-69`).
+  log cada linha retornada (fatura, apólice, nome da administradora,
+  vidas, descrição do produto e do produto master — versão ampliada da
+  query 1, dono, 27/08/2026) [E] (`modulos/gerador_dental.py:34-69`).
 - **QUANDO** a consulta conclui, **ENTÃO** o log **DEVE** mostrar o número
   de faturas e o **TOTAL DE VIDAS A ENVIAR** — soma da coluna `VIDAS`
   (alias de `F.qtd_itens`); sem essa coluna, contagem de linhas [E]
