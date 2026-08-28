@@ -1,6 +1,6 @@
-# Spec — Ajustes de 28/08/2026 (Sempre Odonto, códigos de subgrupo, datas BR)
+# Spec — Ajustes de 28/08/2026 (Sempre Odonto, códigos de subgrupo, datas BR, cor por tipo)
 
-> **Rastreabilidade** — RF: RF-AJU-001..003
+> **Rastreabilidade** — RF: RF-AJU-001..004
 > **Status:** aprovado (implementado e validado) · **Dono:** Alberto (dono do produto) · **Atualizado:** 2026-08-28
 
 Spec no padrão SDD do Grupo FedCorp (mesma adaptação local da
@@ -9,10 +9,12 @@ Spec no padrão SDD do Grupo FedCorp (mesma adaptação local da
 
 ## Contexto
 
-Três pedidos do dono no mesmo dia: (1) exibir o código do subgrupo nos
+Quatro pedidos do dono no mesmo dia: (1) exibir o código do subgrupo nos
 checkboxes do SUBGRUPOS DE VIDA; (2) implementar o último módulo do menu,
 GERAR DENTAL SEMPRE ODONTO, idêntico ao GERA PORTO DENTAL; (3) datas de
-nascimento nas planilhas em formato brasileiro (estavam saindo aaaa-mm-dd).
+nascimento nas planilhas em formato brasileiro (estavam saindo aaaa-mm-dd);
+(4) botões do Sempre Odonto em cor pastel para diferenciar o tipo de
+produto.
 
 ## RF-AJU-001: Código do subgrupo nos checkboxes (SUBGRUPOS DE VIDA)
 
@@ -78,6 +80,26 @@ do que muda:
   Vida usa pandas/outro fluxo e não apresentou o problema.
 - Validação (2026-08-28): planilha Dental regenerada — células de
   `NASCIMENTO` com `number_format='DD/MM/YYYY'` e valor datetime íntegro.
+
+## RF-AJU-004: Cor diferenciada para o Sempre Odonto
+
+**Como** operador, **quero** os botões do Sempre Odonto numa cor diferente
+do verde dos produtos Porto, **para** distinguir o tipo de produto à
+primeira vista [D] (dono, 28/08/2026: "uma cor pastel ... apenas para
+diferenciar o tipo").
+
+- **QUANDO** o menu abre, **ENTÃO** o botão GERAR DENTAL SEMPRE ODONTO
+  **DEVE** aparecer em azul pastel `#7A9CC6` (hover `#5F82AC`), enquanto
+  os produtos Porto continuam verdes [E] (`main.py`, botão do menu).
+- **QUANDO** a janela do Sempre Odonto abre, **ENTÃO** os botões
+  "1) Consultar Vidas" e "2) Gerar Planilha Final" **DEVEM** usar a mesma
+  cor pastel [E]: a cor virou parâmetro de produto — atributos de classe
+  `COR_BOTAO`/`COR_BOTAO_HOVER` em `modulos/porto_dental.py` (padrão
+  `green`/`darkgreen`), sobrepostos na subclasse
+  `modulos/dental_sempre_odonto.py` (`#7A9CC6`/`#5F82AC`).
+- A regra geral do sistema não muda: botão de ação principal **verde** é o
+  padrão (CLAUDE.md, Estilo); o pastel é a exceção que marca o produto
+  não-Porto.
 
 ## Divergência vs. produção
 

@@ -258,8 +258,10 @@ por `query_file`/`prefixo`/`aba`.
   No mesmo dia: checkboxes do SUBGRUPOS DE VIDA passaram a exibir o
   código do subgrupo entre colchetes (ver §4); datas nas planilhas
   (Porto Assistência e Dental) passaram a exibir `DD/MM/YYYY` (helper
-  `celula()` em `gerador_porto.py`). Menu sem placeholders.
-  Spec dos três ajustes: `docs/SPEC-AJUSTES-2026-08-28.md`.
+  `celula()` em `gerador_porto.py`); botões do Sempre Odonto em azul
+  pastel `#7A9CC6` para diferenciar o tipo (cor parametrizada por
+  `COR_BOTAO` na classe). Menu sem placeholders.
+  Spec dos quatro ajustes: `docs/SPEC-AJUSTES-2026-08-28.md`.
 
 - **27/08/2026 (b)** — Módulo GERA PORTO DENTAL implementado (fluxo de duas
   etapas: consulta com totalizador de vidas → geração liberada depois).

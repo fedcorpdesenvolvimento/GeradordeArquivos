@@ -12,7 +12,8 @@ atualizada a cada mudança: ela é o material dos futuros programadores.
 
 - **Estilo**: customtkinter, fontes Arial, botão de ação principal em verde,
   cada módulo é uma `CTkToplevel` aberta pelo menu (`main.py`). Comentários
-  e identificadores em português.
+  e identificadores em português. Exceção de cor: produtos não-Porto usam
+  azul pastel `#7A9CC6` (hoje só o SEMPRE ODONTO) para diferenciar o tipo.
 - **Conexão**: sempre via `db.conectar()` (nunca `fdb.connect` direto).
   Desde 27/08/2026 segue o modelo do **FedHub-Backend** (repo privado
   `Fedcorp-Desenvolvimentos/FedHub-Backend`): credenciais no `.env`
