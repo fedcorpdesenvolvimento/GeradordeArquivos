@@ -3,8 +3,10 @@
    a query 1, que filtra AP.tipo_dental = 'S'.
    O marcador :faturas é substituído pelo gerador com os números de
    fatura vindos da query 1 (em blocos, limite do IN no Firebird).
-   As colunas do resultado viram o cabeçalho da planilha, nesta ordem. */
-SELECT VSM.fatura,VSM.administradora,PES.nome,VP.nome_posto,
+   As colunas do resultado viram o cabeçalho da planilha, nesta ordem.
+   11/09/2026: incluída VSM.apolice (código da apólice) após a fatura, a
+   pedido do usuário — vai para a planilha como coluna APOLICE. */
+SELECT VSM.fatura,VSM.apolice,VSM.administradora,PES.nome,VP.nome_posto,
        VS.nome_segurado,VS.cpf_cnpj,VS.sexo,VS.nascimento,VS.nome_mae
 FROM vida_segurados_mov VSM LEFT JOIN vida_segurados VS ON VS.administradora=VSM.administradora
                                                        AND VS.posto=VSM.posto

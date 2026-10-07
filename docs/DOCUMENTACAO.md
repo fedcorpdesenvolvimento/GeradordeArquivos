@@ -96,6 +96,11 @@ Lista em uma grade (Treeview) as faturas de Vida ativas do mês **sem
 subgrupo preenchido** (`apo.subporto` nulo ou vazio), ignorando apólices
 `C%` e `VR0001`. Serve para conferir cadastro antes de gerar o relatório.
 
+> Correção de 07/10/2026: a query vinha do gerador antigo com um parêntese
+> a menos na condição `((apo.subporto is null) or (apo.subporto=''))`, o que
+> fazia o Firebird falhar com "Token unknown ... group" (SQLCODE -104).
+> Foi só fechar o parêntese; a lógica não mudou.
+
 ### Observações técnicas
 
 - As datas são passadas ao Firebird no formato `MM/DD/YYYY` (padrão que o
@@ -220,7 +225,10 @@ Fluxo em **duas etapas com ordem obrigatória** (decisão do usuário, 08/2026):
    pelos números de fatura da etapa 1: o marcador `:faturas` dentro de um
    `IN` é substituído em blocos de 1.000 (limite do `IN` no Firebird 2.5).
    A planilha segue **exatamente o formato da query 2** — as colunas do
-   resultado viram o cabeçalho, na ordem da query. Arquivo:
+   resultado viram o cabeçalho, na ordem da query. Colunas atuais: FATURA,
+   APOLICE (código da apólice, `VSM.apolice`, incluída em 11/09/2026 a
+   pedido do usuário), ADMINISTRADORA, NOME, NOME_POSTO, NOME_SEGURADO,
+   CPF_CNPJ, SEXO, NASCIMENTO, NOME_MAE. Arquivo:
    `portodental-MMYYYY.xlsx` (competência da vigência), salvo na pasta
    escolhida (persistida em `porto_dental.json`).
 
@@ -237,7 +245,7 @@ parâmetros de produto (atributos de classe): título, `sempre_odonto.json`,
 queries `sempreodonto_1.sql`/`sempreodonto_2.sql`, prefixo do arquivo
 (`sempreodonto-MMYYYY.xlsx`) e nome da aba (`SEMPRE ODONTO`). A única
 diferença de SQL é `AP.tipo_dental = 'S'` na query 1 (a query 2 é
-idêntica). O motor é o mesmo `gerador_dental.py`, agora parametrizado
+idêntica — inclusive a coluna APOLICE acrescentada em 11/09/2026 nas duas). O motor é o mesmo `gerador_dental.py`, agora parametrizado
 por `query_file`/`prefixo`/`aba`.
 
 ## 8. Como adicionar um novo módulo

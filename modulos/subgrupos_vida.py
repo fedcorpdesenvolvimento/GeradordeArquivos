@@ -115,7 +115,7 @@ class JanelaSubgruposVida(ctk.CTkToplevel):
                 where ((f.dt_ini_vig='{data_ini}') or (f.dt_ini_vig < '{data_ini}' and f.dt_fim_vig >='{data_fim}'))
                 and f.status = 'A'
                 and f.ramo = 'V'
-                and ((apo.subporto is null) or (apo.subporto='')
+                and ((apo.subporto is null) or (apo.subporto=''))
                 and ((f.apolice not like 'C%') and (f.apolice <> 'VR0001'))
                 group by f.apolice, f.seq, f.fatura, pes.nome, apo.subporto
                 order by 1, 4
