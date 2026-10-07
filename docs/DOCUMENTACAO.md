@@ -90,6 +90,53 @@ correto após a limpeza.
    formata as datas em dd/mm/aaaa e salva o Excel via "Salvar como"
    (nome sugerido: `Subgrupo_{id}_Relatorio_{data}.xlsx`).
 
+Desde 07/10/2026 os passos 2 a 4 (menos o "Salvar como") vivem em
+`_montar_dataframe`, reaproveitado pelo robô descrito abaixo.
+
+### Robô noturno "Agendar Robô (todos os subgrupos)" (07/10/2026)
+
+Botão roxo abaixo de "Ver Inconsistências". Abre uma janela onde o usuário
+escolhe **data de vigência**, **pasta de destino** (`askdirectory`) e
+**horário HH:MM**. Botões: *Agendar* (verde), *Executar agora* e *Cancelar
+agendamento*. Se o horário já passou hoje, agenda para amanhã.
+
+Como funciona:
+
+- O miolo da geração (temp tables + procedure + leitura do DataFrame) foi
+  extraído de `processar` para `_montar_dataframe(conn, data_firebird,
+  nomes)`, **sem nenhuma janela**. O botão manual continua usando essa
+  mesma função e depois abre o "Salvar como" — a lógica das queries está
+  intacta, só mudou de lugar.
+- O disparo usa `self.after(ms, ...)`; o id fica em `_id_after_robo` para
+  cancelar. Na hora marcada, `_iniciar_robo` desabilita os botões e sobe
+  uma `threading.Thread` com `_executar_robo` para a tela não congelar.
+- A thread abre a própria conexão e, para **cada subgrupo da lista**
+  (todos, independentemente dos checkboxes), chama `_montar_dataframe`
+  com um único nome e salva `Subgrupo_{id}_Relatorio_{dd-mm-aaaa}.xlsx`
+  na pasta. Subgrupo sem dados é só registrado; erro em um subgrupo faz
+  `rollback` e segue para o próximo.
+- Ao final grava/anexa `robo_log.txt` na pasta (início, fim, OK/VAZIO/ERRO
+  por subgrupo) e deposita o resumo em `_fila_robo` (`queue.Queue`).
+  `_vigiar_robo`, que roda na thread principal via `after(500)`, lê a fila
+  e chama `_finalizar_robo` (reabilita botões, mostra o resumo). A thread
+  **não toca em widgets nem chama `self.after()`** — isso foi testado e
+  falha com "main thread is not in main loop" (tkinter não é thread-safe).
+- Nome de subgrupo que não existe em `SUBGRUPOSEGURADORA` conta como ERRO
+  no log (o `_montar_dataframe` devolve id "Varios" nesse caso).
+
+Teste de 07/10/2026 (vigência 01/09/2026, janela oculta, 4 subgrupos:
+CRASE SIGMA, CIPA, AP DE INCENDIO e um nome inexistente): 2 arquivos
+gerados, 1 vazio, 1 erro, em 8 s; o Excel do robô tem as mesmas linhas
+que o botão manual para o mesmo subgrupo. Script em
+`scratchpad/teste_robo.py` da sessão (não versionado).
+
+Limitações (avisadas na própria janela): o programa precisa ficar aberto e
+o computador ligado, sem hibernar — `after()` não dispara com o PC dormindo.
+Como as tabelas TEMP_* são compartilhadas, ninguém pode usar o módulo Vida
+em outra máquina enquanto o robô roda. Se um dia precisar rodar com o
+programa fechado, a saída é um script de linha de comando chamando
+`_montar_dataframe` agendado pelo Agendador de Tarefas do Windows.
+
 ### Fluxo "Ver Inconsistências (Tela)" (`abrir_relatorio_tela`)
 
 Lista em uma grade (Treeview) as faturas de Vida ativas do mês **sem
