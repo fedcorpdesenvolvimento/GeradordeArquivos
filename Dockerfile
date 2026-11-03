@@ -13,9 +13,24 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 # libfbclient2: biblioteca cliente que o fdb carrega (servidor Firebird 2.5).
+# O pacote é o cliente 3.x e lê /etc/firebird/3.0/firebird.conf, cujo padrão
+# WireCrypt = Required é de SERVIDOR; contra o 2.5 (sem criptografia de
+# protocolo) a conexão volta "SQLCODE -923 connection rejected by remote
+# interface". Ajuste nos dois lugares que o cliente pode ler: o conf do pacote
+# e o nosso (docker/firebird.conf, apontado pela variável FIREBIRD).
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libfbclient2 \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && for f in /etc/firebird/3.0/firebird.conf /etc/firebird/4.0/firebird.conf; do \
+         if [ -f "$f" ]; then \
+           sed -i -e 's/^#*[[:space:]]*WireCrypt[[:space:]]*=.*/WireCrypt = Enabled/' \
+                  -e 's/^#*[[:space:]]*AuthClient[[:space:]]*=.*/AuthClient = Srp256, Srp, Legacy_Auth/' "$f"; \
+           grep -q '^WireCrypt' "$f" || echo 'WireCrypt = Enabled' >> "$f"; \
+           grep -q '^AuthClient' "$f" || echo 'AuthClient = Srp256, Srp, Legacy_Auth' >> "$f"; \
+           echo "ajustado $f"; grep -E '^(WireCrypt|AuthClient)' "$f"; \
+         fi; \
+       done
+ENV FIREBIRD=/app/docker
 
 COPY requirements.txt ./
 RUN pip install -r requirements.txt
@@ -26,7 +41,9 @@ COPY . .
 # (só os testes sem tkinter: a imagem slim não tem Tk e o desktop não roda aqui)
 # As variáveis do Render não existem durante o build e config.py aborta sem elas,
 # então este passo recebe valores fictícios — valem só aqui, não na execução.
-RUN FB_HOST=build FB_DATABASE=build FB_USER=build FB_PASSWORD=build     SFTP_HOST=build SFTP_FALLBACK_IP=127.0.0.1 SFTP_USER=build SFTP_PASSWORD=build     python -m unittest tests.test_gerador_funeral tests.test_web
+RUN FB_HOST=build FB_DATABASE=build FB_USER=build FB_PASSWORD=build \
+    SFTP_HOST=build SFTP_FALLBACK_IP=127.0.0.1 SFTP_USER=build SFTP_PASSWORD=build \
+    python -m unittest tests.test_gerador_funeral tests.test_web
 
 RUN mkdir -p /app/saida
 ENV WEB_PASTA_SAIDA=/app/saida
