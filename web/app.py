@@ -14,8 +14,10 @@ No Render: Dockerfile + render.yaml (docs/DEPLOY-RENDER.md).
 """
 from __future__ import annotations
 
+import logging
 import os
 import re
+import time
 from datetime import date, datetime
 from pathlib import Path
 
@@ -32,6 +34,9 @@ PASTA_WEB = Path(__file__).resolve().parent
 BASE_DIR = PASTA_WEB.parent
 PASTA_SAIDA = Path(os.getenv("WEB_PASTA_SAIDA", str(BASE_DIR / "saida")))
 PASTA_SAIDA.mkdir(parents=True, exist_ok=True)
+
+log = logging.getLogger("envioporto.web")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 app = FastAPI(title="SISTEMA DE ENVIO PORTO SEGURO", docs_url=None, redoc_url=None, openapi_url=None)
 app.mount("/static", StaticFiles(directory=str(PASTA_WEB / "static")), name="static")
@@ -75,7 +80,13 @@ async def _trata_http(request: Request, exc: HTTPException):
 
 @app.middleware("http")
 async def _cabecalhos(request: Request, call_next):
+    t0 = time.perf_counter()
     resposta = await call_next(request)
+    duracao = time.perf_counter() - t0
+    if not request.url.path.startswith("/static/"):
+        # aparece no log do Render: serve para ver onde o tempo está indo
+        log.info("%s %s -> %s em %.2fs", request.method, request.url.path, resposta.status_code, duracao)
+    resposta.headers["X-Tempo"] = f"{duracao:.2f}s"
     resposta.headers.setdefault("X-Content-Type-Options", "nosniff")
     resposta.headers.setdefault("X-Frame-Options", "DENY")
     resposta.headers.setdefault("Referrer-Policy", "same-origin")
@@ -111,6 +122,32 @@ def logout():
     resposta = RedirectResponse("/login", status_code=303)
     auth.apagar_cookie(resposta)
     return resposta
+
+
+@app.get("/api/diagnostico")
+def diagnostico(usuario: str = Depends(auth.usuario_atual)):
+    """Mede, de dentro do servidor, o custo de falar com o Firebird pelo túnel:
+    abrir conexão (ou reaproveitar do pool), SELECT 1, listar subgrupos."""
+    import config
+    medidas = {"fb_host": config.DB_CONFIG["host"], "fb_port": config.DB_CONFIG["port"]}
+    t0 = time.perf_counter()
+    try:
+        conn = db.conectar()
+        medidas["conectar_s"] = round(time.perf_counter() - t0, 3)
+        cur = conn.cursor()
+        t0 = time.perf_counter(); cur.execute("SELECT 1 FROM RDB$DATABASE"); cur.fetchall()
+        medidas["select1_s"] = round(time.perf_counter() - t0, 3)
+        t0 = time.perf_counter(); n = len(gerador_vida.listar_subgrupos(conn))
+        medidas["listar_subgrupos_s"] = round(time.perf_counter() - t0, 3); medidas["subgrupos"] = n
+        t0 = time.perf_counter(); cur.execute("SELECT COUNT(*) FROM FATURAS WHERE STATUS='A' AND RAMO='V' AND DT_INI_VIG = '10/01/2026'"); medidas["faturas_out_2026"] = cur.fetchone()[0]
+        medidas["count_faturas_s"] = round(time.perf_counter() - t0, 3)
+        conn.close()
+        t0 = time.perf_counter(); conn = db.conectar(); conn.close()
+        medidas["reconectar_do_pool_s"] = round(time.perf_counter() - t0, 3)
+        medidas["ok"] = True
+    except Exception as e:
+        medidas["ok"] = False; medidas["erro"] = str(e)
+    return JSONResponse(medidas)
 
 
 # ------------------------------------------------------------------ menu

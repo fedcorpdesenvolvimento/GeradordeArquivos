@@ -12,3 +12,7 @@ saida/
 *.xlsx
 __pycache__/
 *.pyc
+
+# instalacao acidental do PyManager (nunca versionar)
+Python/
+python_install_*.log
