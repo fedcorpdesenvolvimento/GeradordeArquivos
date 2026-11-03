@@ -131,6 +131,6 @@ Testes: `python -m unittest discover -s tests` (os de integração exigem
 | `gunicorn: command not found` | serviço criado como runtime Python | recriar como Web Service com Language = Docker (§4) |
 | Login diz "Nenhum usuário configurado" | `WEB_USUARIOS`/`WEB_SENHA` vazios | Environment do serviço |
 | Página de trabalho com `[ERRO] ... Unable to complete network request to host` | túnel fechado, porta errada | ngrok / `FB_HOST`, `FB_PORT` |
-| Diagnóstico com `SQLCODE -923 connection rejected by remote interface` | cliente Firebird 3.x do Debian com WireCrypt = Required contra o servidor 2.5 | `docker/firebird.conf` + ajuste do conf do pacote no Dockerfile (já aplicado) |
+| Diagnóstico com `SQLCODE -923 connection rejected by remote interface` | cliente Firebird 3.x (pacote `libfbclient2` do Debian) contra o servidor 2.5.9 | a imagem instala o cliente **2.5.9 oficial** (tarball do GitHub) no lugar do pacote Debian; ver Dockerfile |
 | Erro -802 string truncation | procedure do banco | `queries/alter_gera_rel_pla_sistema*.sql` (já aplicados em 03/11/2026) |
 | Arquivo "não disponível" depois de pronto | serviço reiniciou (disco efêmero) | gerar de novo e baixar em seguida |

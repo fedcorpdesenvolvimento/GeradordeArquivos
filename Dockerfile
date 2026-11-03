@@ -1,7 +1,7 @@
 # Imagem da tela web do SISTEMA DE ENVIO PORTO SEGURO para o Render — docs/DEPLOY-RENDER.md.
-# Modelo: Dockerfile do CertificadosGerador (python slim + libfbclient2 + testes no build).
+# Modelo: Dockerfile do CertificadosGerador (python slim + testes no build).
 # O Render precisa de Docker aqui porque o driver fdb carrega a biblioteca cliente
-# do Firebird (libfbclient2), que o runtime "Python" nativo do Render não tem.
+# do Firebird, que o runtime "Python" nativo do Render não tem.
 
 FROM python:3.12-slim
 
@@ -12,28 +12,32 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# libfbclient2: biblioteca cliente que o fdb carrega (servidor Firebird 2.5).
-# O pacote é o cliente 3.x e lê /etc/firebird/3.0/firebird.conf, cujo padrão
-# WireCrypt = Required é de SERVIDOR; contra o 2.5 (sem criptografia de
-# protocolo) a conexão volta "SQLCODE -923 connection rejected by remote
-# interface". Ajuste nos dois lugares que o cliente pode ler: o conf do pacote
-# e o nosso (docker/firebird.conf, apontado pela variável FIREBIRD).
+# Cliente Firebird 2.5.9 OFICIAL (mesma versão do servidor e do fbclient.dll das
+# estações Windows). O pacote libfbclient2 do Debian é o cliente 3.x e, contra o
+# servidor 2.5 via túnel, devolvia "SQLCODE -923 connection rejected by remote
+# interface" (03/11/2026). A libfbclient 2.5.9 só depende de libc/libm/libdl/
+# libpthread/librt e de libncurses.so.5, que o Debian atual não tem — o link
+# para a libncurses.so.6 resolve (os símbolos usados são compatíveis).
+ARG FB_TGZ=https://github.com/FirebirdSQL/firebird/releases/download/R2_5_9/FirebirdCS-2.5.9.27139-0.amd64.tar.gz
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        libfbclient2 \
+        ca-certificates curl libncurses6 \
     && rm -rf /var/lib/apt/lists/* \
-    && for f in /etc/firebird/3.0/firebird.conf /etc/firebird/4.0/firebird.conf; do \
-         if [ -f "$f" ]; then \
-           sed -i -e 's/^#*[[:space:]]*WireCrypt[[:space:]]*=.*/WireCrypt = Enabled/' \
-                  -e 's/^#*[[:space:]]*AuthClient[[:space:]]*=.*/AuthClient = Srp256, Srp, Legacy_Auth/' "$f"; \
-           grep -q '^WireCrypt' "$f" || echo 'WireCrypt = Enabled' >> "$f"; \
-           grep -q '^AuthClient' "$f" || echo 'AuthClient = Srp256, Srp, Legacy_Auth' >> "$f"; \
-           echo "ajustado $f"; grep -E '^(WireCrypt|AuthClient)' "$f"; \
-         fi; \
-       done
-ENV FIREBIRD=/app/docker
+    && cd /tmp \
+    && curl -fsSL -o fb.tgz "$FB_TGZ" \
+    && tar xzf fb.tgz \
+    && tar xzf FirebirdCS-2.5.9.27139-0.amd64/buildroot.tar.gz ./opt/firebird/lib/libfbclient.so.2.5.9 \
+    && install -m 644 opt/firebird/lib/libfbclient.so.2.5.9 /usr/lib/x86_64-linux-gnu/libfbclient.so.2.5.9 \
+    && ln -sf libfbclient.so.2.5.9 /usr/lib/x86_64-linux-gnu/libfbclient.so.2 \
+    && ln -sf libfbclient.so.2.5.9 /usr/lib/x86_64-linux-gnu/libfbclient.so \
+    && ln -sf libncurses.so.6 /usr/lib/x86_64-linux-gnu/libncurses.so.5 \
+    && ldconfig \
+    && rm -rf /tmp/fb.tgz /tmp/FirebirdCS-2.5.9.27139-0.amd64 /tmp/opt
 
 COPY requirements.txt ./
 RUN pip install -r requirements.txt
+
+# Confere no build que o fdb carrega a biblioteca 2.5.9 (se falhar, o deploy para aqui).
+RUN python -c "import fdb; fdb.load_api(); print('fbclient carregada:', fdb.fbcore.api.fb_library_name if hasattr(fdb.fbcore, 'api') else 'ok')"
 
 COPY . .
 
