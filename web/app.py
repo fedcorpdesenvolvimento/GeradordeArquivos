@@ -78,6 +78,16 @@ async def _trata_http(request: Request, exc: HTTPException):
     return _pagina("erro.html", request, usuario, codigo=exc.status_code, detalhe=exc.detail)
 
 
+@app.exception_handler(Exception)
+async def _trata_inesperado(request: Request, exc: Exception):
+    """Erro não previsto (ex.: banco fora de alcance): mostra a causa na tela em
+    vez de um "Internal Server Error" mudo, e registra no log do Render."""
+    log.exception("erro inesperado em %s %s", request.method, request.url.path)
+    usuario = auth.usuario_do_cookie(request)
+    return _pagina("erro.html", request, usuario, codigo=500,
+                   detalhe=f"{type(exc).__name__}: {exc}")
+
+
 @app.middleware("http")
 async def _cabecalhos(request: Request, call_next):
     t0 = time.perf_counter()
@@ -96,7 +106,8 @@ async def _cabecalhos(request: Request, call_next):
 # ------------------------------------------------------------------ login
 @app.get("/api/saude")
 def saude():
-    return {"ok": True, "usuarios_configurados": auth.configurado()}
+    return {"ok": True, "usuarios_configurados": auth.configurado(),
+            "commit": os.getenv("RENDER_GIT_COMMIT", "")[:7] or None}
 
 
 @app.get("/login", response_class=HTMLResponse)
