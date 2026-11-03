@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<div class="cartao">
+  <h2>Erro {{ codigo }}</h2>
+  <div class="erro">{{ detalhe }}</div>
+  <p><a class="botao cinza" href="javascript:history.back()">Voltar</a> <a class="botao" href="/">Menu</a></p>
+</div>
+{% endblock %}

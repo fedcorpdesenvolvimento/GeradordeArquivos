@@ -76,3 +76,16 @@ Registro compartilhado entre os agentes. Acrescentar entradas no fim; nunca apag
   5. Porto Assistencia: a caixa "Enviar..." volta marcada da ultima vez (ja apontado em 03/11).
 - Pendencias: decidir itens 1 e 3 (Alberto); atualizar DOCUMENTACAO.md §1-§3 (analista-requisitos,
   quando autorizado); testes unitarios rodados sem banco (ver relatorio).
+
+## 2026-11-03 - orquestrador (Claude Code) - branch web-render (versao web para o Render)
+
+- main preservada e publicada (044e882) antes de qualquer mudanca; branch web-render criada no GitHub e
+  como worktree local em U:\--2021\04-EnvioPorto-web.
+- Novo: modulos/gerador_vida.py (nucleo de Vida sem tkinter; classe desktop delega; 8 SQLs identicos
+  verificados por script), web/ (FastAPI: auth com usuarios fixos por env, fila de trabalhos em thread,
+  templates Jinja2), Dockerfile, .dockerignore, render.yaml, docs/DEPLOY-RENDER.md, tests/test_web.py.
+- Smoke contra o banco pelo TestClient: login, 20 subgrupos, inconsistencias, CIPA, Funeral (20.236),
+  Dental/Sempre Odonto (consulta + geracao de 2 faturas), Assistencia Auto (limite 50) - tudo OK.
+- Primeiro deploy falhou por runtime Python + "gunicorn gerador_arquivos"; correcao = Blueprint Docker.
+- Pendente do usuario: abrir o tunel ngrok (ou roteador) ate 192.168.0.6:3050; preencher WEB_SENHA e FB_*/SFTP_*
+  no painel do Render; importar o render.yaml.

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<div class="cartao">
+  <h2>SUBGRUPOS DE VIDA</h2>
+  <form method="post" action="/vida/verificar">
+    <label for="data">Data de vigência</label>
+    <input type="date" id="data" name="data" value="{{ data }}" required>
+    <label>Subgrupos</label>
+    <div class="subgrupos">
+      {% for nome, codigo in subgrupos %}
+      <label><input type="checkbox" name="subgrupo" value="{{ nome }}"> {{ nome }} [{{ codigo }}]</label>
+      {% endfor %}
+    </div>
+    <p style="font-size:13px;color:#555">Antes de gerar, o sistema lista as apólices do(s) subgrupo(s) que estão sem SUBPORTO na vigência e pede confirmação. Subgrupo 1317377 (VIDA RJ) inclui os segurados com cobertura provisória (fatura 99 em amarelo).</p>
+    <button type="submit">Gerar Planilha Excel</button>
+    <a class="botao cinza" href="/vida/inconsistencias?data={{ data }}">Ver Inconsistências (todas)</a>
+  </form>
+</div>
+{% endblock %}

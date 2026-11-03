@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<div class="cartao">
+  <h2>PORTO ASSISTÊNCIA</h2>
+  <form method="post" action="/assistencia/gerar" onsubmit="return confirmarEnvio()">
+    <label for="data">Data de início de vigência</label>
+    <input type="date" id="data" name="data" value="{{ data }}" required>
+    <label>Produtos (limite em branco = base toda)</label>
+    <table>
+      <tr><th></th><th>Produto</th><th>Aba</th><th>Limite de linhas (opcional)</th></tr>
+      {% for p in produtos %}
+      <tr>
+        <td><input type="checkbox" name="produto_{{ p.codigo }}" value="sim" checked></td>
+        <td>Código {{ p.codigo }} - {{ p.nome }}</td>
+        <td><code>{{ p.aba }}</code></td>
+        <td><input type="number" name="limite_{{ p.codigo }}" min="1" style="width:120px"></td>
+      </tr>
+      {% endfor %}
+    </table>
+    <div class="aviso" style="margin-top:16px">
+      <label style="margin:0"><input type="checkbox" name="enviar" value="sim" id="enviar"> Enviar o arquivo ao SFTP da Porto Seguro (/Porto/Remessa) depois de gerar</label>
+      <label style="margin:6px 0 0"><input type="checkbox" name="confirmo_envio" value="sim" id="confirmo"> Confirmo: tudo que cai em /Porto/Remessa pode ser processado pela seguradora.</label>
+    </div>
+    <button type="submit">Gerar Relação</button>
+  </form>
+</div>
+<script>
+function confirmarEnvio() {
+  var e = document.getElementById('enviar').checked, c = document.getElementById('confirmo').checked;
+  if (e && !c) { alert('Marque a confirmação para enviar ao SFTP, ou desmarque o envio.'); return false; }
+  if (e && c) { return confirm('O arquivo será ENVIADO à Porto Seguro. Continuar?'); }
+  return true;
+}
+</script>
+{% endblock %}

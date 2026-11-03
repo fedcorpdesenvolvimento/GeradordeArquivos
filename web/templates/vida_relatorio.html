@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<div class="cartao">
+  <h2>Relatório de Inconsistências — {{ data_br }}</h2>
+  <form method="get" action="/vida/inconsistencias">
+    <label for="data">Mês de referência</label>
+    <input type="date" id="data" name="data" value="{{ data }}"> <button type="submit">Atualizar</button>
+    <a class="botao cinza" href="/vida">Voltar</a>
+  </form>
+  {% if not linhas %}
+  <div class="ok">Nenhuma inconsistência encontrada para esta data.</div>
+  {% else %}
+  <p>{{ linhas|length }} fatura(s) de Vida ativas com apólice sem SUBPORTO.</p>
+  <table>
+    <tr>{% for c in colunas %}<th>{{ c }}</th>{% endfor %}</tr>
+    {% for l in linhas %}<tr>{% for v in l %}<td>{{ v if v is not none else '' }}</td>{% endfor %}</tr>{% endfor %}
+  </table>
+  {% endif %}
+</div>
+{% endblock %}

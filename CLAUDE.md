@@ -82,6 +82,16 @@ atualizada a cada mudança: ela é o material dos futuros programadores.
 - **Agentes especialistas**: registram cada análise em
   `docs/equipe/DIARIO.md`; o dba é somente leitura por padrão.
 
+- **BRANCHES** (03/11/2026): `main` = versão desktop em uso
+  (`U:\--2021-EnvioPorto`); `web-render` = versão web (FastAPI) em
+  pasta própria `U:\--2021-EnvioPorto-web`, deploy no Render via
+  Docker + `render.yaml` (ver `docs/DEPLOY-RENDER.md`). Correções de
+  negócio nascem na `main` e são trazidas para a `web-render` com
+  `git merge main`; a lógica de Vida vive em `modulos/gerador_vida.py`,
+  usado pelas duas telas.
+- **LOGIN WEB**: dois usuários fixos em `WEB_USUARIOS`, senha em
+  `WEB_SENHA` (.env local / Environment do Render). Sem cadastro em banco.
+
 ## Como rodar / testar
 
 ```
@@ -89,6 +99,7 @@ python main.py
 ```
 
 Testes unitários: `python -m unittest discover -s tests` (sem banco).
+Web local: `uvicorn web.app:app --reload --port 8000` (branch web-render).
 Integração com o Firebird real: definir `PORTO_TESTE_INTEGRACAO=1` antes.
 
 Testes de geração sem dados reais: apontar as queries para `RDB$RELATIONS`

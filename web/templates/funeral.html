@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<div class="cartao">
+  <h2>GERAR ARQUIVO FUNERAL</h2>
+  <p>Segurados de Vida com cobertura FUNERAL ou CERIMONIAL nas faturas ativas da vigência (inclui apólices anuais em curso). Colunas: administradora, apólice, nome, CPF, nascimento. CPF sem repetição.</p>
+  <form method="post" action="/funeral/gerar">
+    <label for="data">Data de início de vigência</label>
+    <input type="date" id="data" name="data" value="{{ data }}" required>
+    <div style="margin-top:14px"><button type="submit">Gerar Arquivo Funeral</button></div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+.git
+.env
+.env.bak
+__pycache__/
+*.pyc
+saida/
+*.xlsx
+*.json
+docs/equipe/
+.claude/
+Nova pasta/

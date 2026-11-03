@@ -1,0 +1,49 @@
+# Blueprint do Render — SISTEMA DE ENVIO PORTO SEGURO (tela web) — docs/DEPLOY-RENDER.md.
+# Importar em render.com > New > Blueprint apontando para este repositório, branch web-render.
+# Os valores marcados sync: false são preenchidos no painel do Render (nunca aqui).
+services:
+  - type: web
+    name: envioporto-web
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    branch: web-render
+    region: ohio
+    plan: starter
+    healthCheckPath: /api/saude
+    autoDeploy: true
+    envVars:
+      # Login da tela: dois usuários fixos (separados por vírgula) e a senha
+      - key: WEB_USUARIOS
+        value: alberto@grupofedcorp.com.br,beneficiosocial@grupofedcorp.com.br
+      - key: WEB_SENHA
+        sync: false
+      - key: WEB_SEGREDO_SESSAO
+        generateValue: true
+      # Firebird 2.5 — alcançado pelo túnel ngrok (docs/DEPLOY-RENDER.md §2)
+      - key: FB_HOST
+        sync: false
+      - key: FB_PORT
+        sync: false
+      - key: FB_DATABASE
+        sync: false
+      - key: FB_USER
+        sync: false
+      - key: FB_PASSWORD
+        sync: false
+      - key: FB_CHARSET
+        value: ASCII
+      - key: FB_POOL_SIZE
+        value: "5"
+      # SFTP da Porto (só usado se o usuário marcar o envio na tela da Assistência)
+      - key: SFTP_HOST
+        value: sftp.portoseguro.com.br
+      - key: SFTP_FALLBACK_IP
+        sync: false
+      - key: SFTP_PORT
+        value: "2022"
+      - key: SFTP_USER
+        sync: false
+      - key: SFTP_PASSWORD
+        sync: false
+      - key: SFTP_DESTINO
+        value: /Porto/Remessa

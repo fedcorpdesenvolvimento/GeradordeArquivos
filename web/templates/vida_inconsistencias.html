@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<div class="cartao">
+  <h2 style="color:#b00020">{{ achados|length }} apólice(s) do escopo com SUBPORTO vazio na vigência {{ data_br }}</h2>
+  <div class="aviso">Essas empresas NÃO entrarão na planilha. Corrija o cadastro ou continue mesmo assim.</div>
+  <table>
+    <tr><th>Subgrupo</th><th>Apólice</th><th>Seq</th><th>Fatura</th><th>Administradora</th></tr>
+    {% for nome, id_sub, apol, seq, fat, adm in achados %}
+    <tr><td>{{ nome }} [{{ id_sub }}]</td><td>{{ apol }}</td><td>{{ seq }}</td><td>{{ fat }}</td><td>{{ adm }}</td></tr>
+    {% endfor %}
+  </table>
+  <form method="post" action="/vida/gerar" style="margin-top:16px">
+    <input type="hidden" name="data" value="{{ data }}">
+    {% for n in nomes %}<input type="hidden" name="subgrupo" value="{{ n }}">{% endfor %}
+    <button type="submit">Continuar mesmo assim</button>
+    <a class="botao vermelho" href="/vida">Cancelar geração</a>
+  </form>
+</div>
+{% endblock %}

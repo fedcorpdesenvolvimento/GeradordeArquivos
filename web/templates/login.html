@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block titulo %}Entrar — SISTEMA DE ENVIO PORTO SEGURO{% endblock %}
+{% block conteudo %}
+<div class="cartao login">
+  <h2>Entrar</h2>
+  {% if not configurado %}
+  <div class="erro">Nenhum usuário configurado. Defina WEB_USUARIOS e WEB_SENHA no ambiente (.env local ou Environment do Render).</div>
+  {% endif %}
+  {% if erro %}<div class="erro">{{ erro }}</div>{% endif %}
+  <form method="post" action="/login" autocomplete="on">
+    <label for="email">E-mail</label>
+    <input type="email" id="email" name="email" required autofocus>
+    <label for="senha">Senha</label>
+    <input type="password" id="senha" name="senha" required>
+    <button type="submit">Entrar</button>
+  </form>
+</div>
+{% endblock %}

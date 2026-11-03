@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block titulo %}SISTEMA DE ENVIO PORTO SEGURO{% endblock %}</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <h1><a href="/" style="text-decoration:none;color:inherit">SISTEMA DE ENVIO PORTO SEGURO</a></h1>
+  {% if usuario %}
+  <div class="usuario">{{ usuario }} &nbsp;|&nbsp;
+    <form method="post" action="/logout"><button class="cinza" type="submit">Sair</button></form>
+  </div>
+  {% endif %}
+</header>
+<main>
+{% block conteudo %}{% endblock %}
+</main>
+<div class="rodape">Grupo Fedcorp — versão web</div>
+</body>
+</html>

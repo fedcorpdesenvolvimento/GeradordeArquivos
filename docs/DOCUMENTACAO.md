@@ -494,6 +494,38 @@ parte 2 ficou em 24.968) — são os segurados anuais de `SEGURADOS_INC`
 cuja vigência contém 01/10/2026. Se a Porto já os tem, a seguradora pode
 apontar duplicidade; nesse caso basta voltar o `OR` das três queries.
 
+## 7d. Versão web (branch `web-render`, 03/11/2026)
+
+Pasta local `U:\--2021-EnvioPorto-web` (git worktree da branch
+`web-render`). A `main` continua sendo o desktop em uso. Estrutura:
+
+- `web/app.py` — FastAPI: login, menu, `/vida`, `/funeral`, `/dental`,
+  `/sempreodonto`, `/assistencia`, `/trabalhos/{id}` (acompanhamento +
+  download). Sem tkinter.
+- `web/auth.py` — usuários fixos de `WEB_USUARIOS` + `WEB_SENHA`
+  (`WEB_SENHA_n` opcional por usuário); cookie assinado (`itsdangerous`),
+  8 h; 10 falhas por e-mail+IP em 15 min bloqueiam.
+- `web/trabalhos.py` — fila em memória; cada geração roda em thread e a
+  página consulta `/trabalhos/{id}/estado` a cada 2 s.
+- `web/templates/*.html`, `web/static/style.css` — telas (Jinja2).
+- `modulos/gerador_vida.py` — núcleo de SUBGRUPOS DE VIDA sem interface
+  (listar subgrupos, inconsistências, montar_dataframe, cobertura
+  provisória, salvar_excel). A classe desktop `JanelaSubgruposVida` delega
+  para ele; os SQLs são idênticos aos originais (verificado por script).
+- `Dockerfile`, `.dockerignore`, `render.yaml` — deploy no Render
+  (Docker, porque o runtime Python do Render não tem libfbclient2).
+  Guia completo, inclusive a questão do ngrok: `docs/DEPLOY-RENDER.md`.
+- Testes: `tests/test_web.py` (login, proteção das rotas, fila, download;
+  sem banco). No build do Docker rodam só os testes sem tkinter.
+
+Diferenças para o desktop: arquivos efêmeros (baixar na hora), sem robô
+noturno, envio SFTP só com dupla confirmação.
+
+Smoke test de 03/11/2026 contra o banco real pelo `TestClient`: login,
+20 subgrupos listados, grade de inconsistências do PSPS, CIPA gerado e
+baixado, Funeral (20.236 segurados), consultas Dental/Sempre Odonto e
+Assistência Auto com limite — tudo OK.
+
 ## 8. Como adicionar um novo módulo
 
 1. Criar `modulos/nome_do_modulo.py` com uma classe `ctk.CTkToplevel`
@@ -503,6 +535,10 @@ apontar duplicidade; nesse caso basta voltar o `OR` das três queries.
 4. Documentar o módulo neste arquivo (objetivo, fluxo, tabelas usadas).
 
 ## 9. Histórico
+
+- **03/11/2026 (e)** — Branch `web-render`: versão web FastAPI com login
+  fixo, Docker + render.yaml para o Render, núcleo `gerador_vida.py` (§7d,
+  `docs/DEPLOY-RENDER.md`).
 
 - **03/11/2026 (d)** — Novo módulo GERAR ARQUIVO FUNERAL (§7c) e critério
   de vigência "vigência em curso contém a data" aplicado às queries do

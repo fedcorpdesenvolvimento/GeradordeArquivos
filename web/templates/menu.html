@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<div class="cartao">
+  <h2>Selecione o módulo</h2>
+  <div class="menu">
+    {% for rota, nome, descricao in modulos %}
+    <a href="/{{ rota }}" class="{{ 'azul' if rota == 'sempreodonto' else '' }}">{{ nome }}<small>{{ descricao }}</small></a>
+    {% endfor %}
+  </div>
+</div>
+{% if trabalhos %}
+<div class="cartao">
+  <h2>Últimos trabalhos</h2>
+  <table>
+    <tr><th>Trabalho</th><th>Usuário</th><th>Situação</th><th>Resultado</th><th></th></tr>
+    {% for t in trabalhos %}
+    <tr>
+      <td>{{ t.titulo }}</td><td>{{ t.usuario }}</td>
+      <td class="status {{ t.status }}">{{ t.status }}</td>
+      <td>{{ t.resumo or t.erro or '' }}</td>
+      <td><a href="/trabalhos/{{ t.id }}">abrir</a>{% if t.arquivo %} · <a href="/trabalhos/{{ t.id }}/arquivo">baixar</a>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+{% endblock %}

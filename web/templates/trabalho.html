@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<div class="cartao">
+  <h2>{{ t.titulo }}</h2>
+  <p>Situação: <span id="status" class="status {{ t.status }}">{{ t.status }}</span>
+     <span id="resumo">{{ t.resumo }}</span></p>
+  <div id="erro" class="erro" {% if not t.erro %}hidden{% endif %}>{{ t.erro or '' }}</div>
+  <div id="download" {% if not t.arquivo %}hidden{% endif %}>
+    <a class="botao" href="/trabalhos/{{ t.id }}/arquivo">Baixar {{ t.nome_arquivo or 'arquivo' }}</a>
+  </div>
+  <h3>Log</h3>
+  <pre class="log" id="log">{{ t.log|join('\n') }}</pre>
+  <p><a class="botao cinza" href="/">Voltar ao menu</a></p>
+</div>
+<script>
+(function () {
+  var status = "{{ t.status }}";
+  if (status !== "executando") return;
+  var id = "{{ t.id }}";
+  function tick() {
+    fetch("/trabalhos/" + id + "/estado", {credentials: "same-origin"}).then(r => r.json()).then(function (d) {
+      document.getElementById("log").textContent = d.log.join("\n");
+      var s = document.getElementById("status"); s.textContent = d.status; s.className = "status " + d.status;
+      document.getElementById("resumo").textContent = d.resumo || "";
+      if (d.status === "executando") { setTimeout(tick, 2000); return; }
+      if (d.arquivo) { var dl = document.getElementById("download"); dl.hidden = false; dl.querySelector("a").textContent = "Baixar " + d.arquivo; }
+      if (d.status === "erro") { var e = document.getElementById("erro"); e.hidden = false; e.textContent = d.log[d.log.length - 1] || "Erro"; }
+    }).catch(function () { setTimeout(tick, 4000); });
+  }
+  setTimeout(tick, 1500);
+})();
+</script>
+{% endblock %}

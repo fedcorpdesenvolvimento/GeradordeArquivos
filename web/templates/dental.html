@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<div class="cartao">
+  <h2>{{ cfg.titulo }}</h2>
+  <p>Fluxo em duas etapas: <strong>1) Consultar Vidas</strong> mostra as faturas e o total de vidas da vigência; só depois <strong>2) Gerar Planilha Final</strong> é liberado, usando exatamente as faturas consultadas.</p>
+  <form method="post" action="/{{ produto }}/consultar">
+    <label for="data">Data de início de vigência</label>
+    <input type="date" id="data" name="data" value="{{ data }}" required>
+    <div style="margin-top:14px"><button type="submit" class="{{ 'azul' if cfg.cor == 'azul' else '' }}">1) Consultar Vidas</button></div>
+  </form>
+  {% if log %}
+  <h3>Log da consulta</h3>
+  <pre class="log">{{ log|join('\n') }}</pre>
+  {% endif %}
+  {% if faturas is not none %}
+    {% if faturas %}
+    <div class="ok">Faturas encontradas: {{ faturas|length }} — TOTAL DE VIDAS A ENVIAR: {{ total_vidas }}</div>
+    <form method="post" action="/{{ produto }}/gerar">
+      <input type="hidden" name="data" value="{{ data }}">
+      <input type="hidden" name="faturas" value="{{ faturas|join(',') }}">
+      <button type="submit" class="{{ 'azul' if cfg.cor == 'azul' else '' }}">2) Gerar Planilha Final</button>
+    </form>
+    {% else %}
+    <div class="aviso">Nenhuma fatura na vigência — nada a gerar.</div>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}
