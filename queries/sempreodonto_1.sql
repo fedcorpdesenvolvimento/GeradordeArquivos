@@ -1,3 +1,4 @@
+/* Vigência (03/11/2026): entra também a fatura/segurado cuja vigência em curso contém :inivig — apólices não mensais (ANUAL, N MESES) com segurados ativos. */
 /* DENTAL SEMPRE ODONTO — Query 1: faturas da vigência a serem enviadas.
    Idêntica à portodental_1.sql, com AP.tipo_dental = 'S' em vez de 'P'
    (decisão do usuário, 28/08/2026). Parâmetro :inivig.
@@ -11,5 +12,5 @@ from FATURAS F LEFT JOIN APOLICES AP ON AP.administradora=F.administradora AND A
                left join fatura_dsc_prod fdp on fdp.fatura=f.fatura
 WHERE AP.status = 'A'
   AND AP.tipo_dental = 'S'
-  AND F.dt_ini_vig = :inivig
+  AND ((F.dt_ini_vig = :inivig) OR (:inivig BETWEEN F.dt_ini_vig AND F.dt_fim_vig))
 order by 3,2

@@ -13,6 +13,7 @@ from modulos.subgrupos_vida import JanelaSubgruposVida
 from modulos.porto_assistencia import JanelaPortoAssistencia
 from modulos.porto_dental import JanelaPortoDental
 from modulos.dental_sempre_odonto import JanelaDentalSempreOdonto
+from modulos.funeral import JanelaFuneral
 
 ctk.set_appearance_mode("system")
 ctk.set_default_color_theme("blue")
@@ -22,7 +23,7 @@ class MenuPrincipal(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("SISTEMA DE ENVIO PORTO SEGURO")
-        self.geometry("460x480")
+        self.geometry("460x560")
 
         ctk.CTkLabel(self, text="SISTEMA DE ENVIO\nPORTO SEGURO",
                      font=("Arial", 22, "bold")).pack(pady=(30, 8))
@@ -49,6 +50,11 @@ class MenuPrincipal(ctk.CTk):
                       fg_color="#7A9CC6", hover_color="#5F82AC",
                       command=self.abrir_sempre_odonto).pack(pady=8)
 
+        ctk.CTkButton(self, text="GERAR ARQUIVO FUNERAL",
+                      font=("Arial", 15, "bold"), height=48, width=300,
+                      fg_color="green", hover_color="darkgreen",
+                      command=self.abrir_funeral).pack(pady=8)
+
         ctk.CTkLabel(self, text="Grupo Fedcorp",
                      font=("Arial", 10)).pack(side="bottom", pady=8)
 
@@ -66,6 +72,10 @@ class MenuPrincipal(ctk.CTk):
 
     def abrir_sempre_odonto(self):
         janela = JanelaDentalSempreOdonto(self)
+        janela.focus()
+
+    def abrir_funeral(self):
+        janela = JanelaFuneral(self)
         janela.focus()
 
 

@@ -1,3 +1,4 @@
+/* Vigência (03/11/2026): entra também a fatura/segurado cuja vigência em curso contém :inivig — apólices não mensais (ANUAL, N MESES) com segurados ativos. */
 /* Código 1 - Residencial (parte 2): RESIDENCIAS da apolice 15008
    Fonte: querys-porto-assit.sql. Parametro :inivig = data de inicio de vigencia. */
 select
@@ -7,6 +8,6 @@ ss.nome,ss.cpf_cnpj,ss.nascimento DataNascimento,'' NomeInquilino,
 '' CpfCnpjINQUILINO
 from segurados_inc ss left join pessoas pes on pes.pessoa = ss.administradora
 where ss.status_seg <> 'C'
-and ss.inicio_vig >= :inivig
+and ((ss.inicio_vig >= :inivig) or (:inivig between ss.inicio_vig and ss.final_vig))
 and ss.apolice = '15008'
 and ((ss.cpf_cnpj <> '') and (ss.cpf_cnpj <> '0'))

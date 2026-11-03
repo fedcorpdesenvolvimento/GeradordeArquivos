@@ -1,3 +1,4 @@
+/* Vigência (03/11/2026): entra também a fatura/segurado cuja vigência em curso contém :inivig — apólices não mensais (ANUAL, N MESES) com segurados ativos. */
 /* Código 2 - Auto: apolices BOAT (vida_segurados_mov)
    Fonte: querys-porto-assit.sql. Parametro :inivig = data de inicio de vigencia. */
 select
@@ -11,5 +12,5 @@ AND VS.posto=M.posto AND VS.seq_posto=M.seq_posto AND VS.matricula=M.matricula A
                           left join vida_postos vp on vp.administradora=m.administradora AND Vp.posto=M.posto AND Vp.seq_posto=M.seq_posto
 where m.apolice like 'BOAT%'
   AND M.status <> 'C'
-  AND M.inicio_vig = :inivig
+  AND ((M.inicio_vig = :inivig) OR (:inivig BETWEEN M.inicio_vig AND M.final_vig))
   and m.fatura > 0

@@ -25,7 +25,6 @@ from tkcalendar import DateEntry
 
 from modulos import gerador_porto
 from modulos.envio_sftp import enviar_arquivo
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG_JSON = os.path.join(BASE_DIR, "porto_assistencia.json")
 
