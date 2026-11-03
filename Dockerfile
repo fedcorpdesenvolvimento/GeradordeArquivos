@@ -37,7 +37,7 @@ COPY requirements.txt ./
 RUN pip install -r requirements.txt
 
 # Confere no build que o fdb carrega a biblioteca 2.5.9 (se falhar, o deploy para aqui).
-RUN python -c "import fdb; fdb.load_api(); print('fbclient carregada:', fdb.fbcore.api.fb_library_name if hasattr(fdb.fbcore, 'api') else 'ok')"
+RUN python -c "import fdb; fdb.load_api(); print('fbclient carregada:', fdb.fbcore.api.client_library_name)"
 
 COPY . .
 
