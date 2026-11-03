@@ -59,7 +59,26 @@ class ConexaoPool:
         self.close()
 
 
+TIMEOUT_ALCANCE_S = 10
+
+
+def _conferir_alcance(host: str, port: int) -> None:
+    """Falha rápido se o servidor não responde na porta (o fdb não tem timeout
+    de conexão e ficaria minutos pendurado — p.ex. FB_HOST com o IP da rede
+    local configurado no Render)."""
+    import socket
+    try:
+        with socket.create_connection((host, port), timeout=TIMEOUT_ALCANCE_S):
+            pass
+    except OSError as e:
+        raise ConnectionError(
+            f"Não foi possível alcançar o Firebird em {host}:{port} em {TIMEOUT_ALCANCE_S}s "
+            f"({e}). Confira FB_HOST/FB_PORT (no Render: endereço do túnel ngrok, não o IP da rede local) "
+            f"e se o túnel está aberto.") from e
+
+
 def _criar_conexao(charset: str) -> fdb.Connection:
+    _conferir_alcance(DB_CONFIG['host'], DB_CONFIG['port'])
     return fdb.connect(
         host=DB_CONFIG['host'],
         port=DB_CONFIG['port'],
