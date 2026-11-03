@@ -85,8 +85,16 @@ def carregar_query(nome_arquivo: str) -> str:
     return sql
 
 
+def _sem_comentarios(sql: str) -> str:
+    """Remove comentários /* */ e -- : eles também citam :inivig e inflariam a
+    contagem de parâmetros (o fdb tolerava; o firebirdsql dá SQLDA error -804)."""
+    sql = re.sub(r"/\*.*?\*/", "", sql, flags=re.S)
+    return re.sub(r"--[^\n]*", "", sql)
+
+
 def _preparar_parametros(sql: str, inivig: datetime.date) -> tuple[str, list]:
-    """Troca cada :inivig por ? (estilo do fdb) e monta a lista de valores."""
+    """Troca cada :inivig por ? (estilo DB-API) e monta a lista de valores."""
+    sql = _sem_comentarios(sql)
     ocorrencias = len(re.findall(r":inivig\b", sql, flags=re.IGNORECASE))
     sql_qmark = re.sub(r":inivig\b", "?", sql, flags=re.IGNORECASE)
     return sql_qmark, [inivig] * ocorrencias

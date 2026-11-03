@@ -77,8 +77,31 @@ def _conferir_alcance(host: str, port: int) -> None:
             f"e se o túnel está aberto.") from e
 
 
-def _criar_conexao(charset: str) -> fdb.Connection:
-    _conferir_alcance(DB_CONFIG['host'], DB_CONFIG['port'])
+# Driver: "fdb" (padrão; usa a fbclient nativa, como o desktop) ou "firebirdsql"
+# (Python puro, implementa o protocolo sem biblioteca nativa). No Render, via
+# túnel ngrok, a fbclient devolvia "SQLCODE -923 connection rejected by remote
+# interface" mesmo na versão 2.5.9, e o firebirdsql conecta — escolha por
+# DB_DRIVER no ambiente (03/11/2026). Os dois seguem a DB-API 2 e o resto do
+# sistema não vê diferença (rowcount, parâmetros ?, pandas.read_sql).
+import os as _os
+
+DRIVER = (_os.getenv("DB_DRIVER") or "fdb").strip().lower()
+DRIVERS_VALIDOS = ("fdb", "firebirdsql")
+
+
+def _conectar_com(driver: str, charset: str):
+    if driver == "firebirdsql":
+        import firebirdsql
+        # O fdb com ASCII deixa os bytes acentuados passarem (comportamento
+        # herdado da Vida); o firebirdsql decodifica à risca e quebra em 0xD3
+        # etc. As colunas são NONE (bytes WIN1252), então para este driver
+        # ASCII vira WIN1252 — mesmos bytes no fio, texto legível em Python.
+        charset_driver = "WIN1252" if charset.upper() == "ASCII" else charset
+        return firebirdsql.connect(
+            host=DB_CONFIG['host'], port=DB_CONFIG['port'], database=DB_CONFIG['database'],
+            user=DB_CONFIG['user'], password=DB_CONFIG['password'], charset=charset_driver,
+            timeout=60,
+        )
     return fdb.connect(
         host=DB_CONFIG['host'],
         port=DB_CONFIG['port'],
@@ -87,6 +110,34 @@ def _criar_conexao(charset: str) -> fdb.Connection:
         password=DB_CONFIG['password'],
         charset=charset,
     )
+
+
+def _criar_conexao(charset: str):
+    if DRIVER not in DRIVERS_VALIDOS:
+        raise RuntimeError(f"DB_DRIVER inválido: {DRIVER!r} (use {' ou '.join(DRIVERS_VALIDOS)})")
+    _conferir_alcance(DB_CONFIG['host'], DB_CONFIG['port'])
+    return _conectar_com(DRIVER, charset)
+
+
+def testar_drivers(charset: str | None = None) -> dict:
+    """Diagnóstico: tenta abrir uma conexão com cada driver e devolve
+    {driver: {"ok": bool, "segundos": float, "erro": str|None}}."""
+    import time
+    charset = charset or DB_CONFIG['charset']
+    saida = {}
+    for driver in DRIVERS_VALIDOS:
+        t0 = time.perf_counter()
+        try:
+            conn = _conectar_com(driver, charset)
+            cur = conn.cursor()
+            cur.execute("SELECT 1 FROM RDB$DATABASE")
+            cur.fetchone()
+            conn.close()
+            saida[driver] = {"ok": True, "segundos": round(time.perf_counter() - t0, 3), "erro": None}
+        except Exception as e:  # noqa: BLE001 - é diagnóstico
+            saida[driver] = {"ok": False, "segundos": round(time.perf_counter() - t0, 3),
+                             "erro": f"{type(e).__name__}: {str(e)[:200]}"}
+    return saida
 
 
 def _validar(conn) -> bool:

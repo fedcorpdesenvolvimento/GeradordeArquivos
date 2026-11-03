@@ -58,6 +58,13 @@ class ParametrosTests(unittest.TestCase):
         self.assertEqual(sql, "a = ? or b between ? and c")
         self.assertEqual(params, [datetime.date(2026, 10, 1)] * 2)
 
+    def test_ignora_inivig_dentro_de_comentarios(self):
+        sql = "/* Parâmetro :inivig = data */\n-- usa :inivig\nselect 1 from x where d = :inivig"
+        sql2, params = gf._preparar_parametros(sql, datetime.date(2026, 10, 1))
+        self.assertEqual(len(params), 1)
+        self.assertNotIn(":inivig", sql2)
+        self.assertEqual(sql2.count("?"), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

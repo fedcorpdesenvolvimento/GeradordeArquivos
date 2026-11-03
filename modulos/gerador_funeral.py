@@ -36,7 +36,10 @@ def _carregar_sql(query_file: str) -> str:
 
 
 def _preparar_parametros(sql: str, inivig: datetime.date):
-    """Troca cada :inivig por ? (estilo do fdb) e monta a lista de valores."""
+    """Troca cada :inivig por ? e monta a lista de valores, ignorando os
+    comentários da query (que também citam :inivig) — ver gerador_porto."""
+    from modulos.gerador_porto import _sem_comentarios
+    sql = _sem_comentarios(sql)
     ocorrencias = len(re.findall(r":inivig\b", sql, flags=re.IGNORECASE))
     return re.sub(r":inivig\b", "?", sql, flags=re.IGNORECASE), [inivig] * ocorrencias
 

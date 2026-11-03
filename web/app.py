@@ -140,7 +140,8 @@ def diagnostico(usuario: str = Depends(auth.usuario_atual)):
     """Mede, de dentro do servidor, o custo de falar com o Firebird pelo túnel:
     abrir conexão (ou reaproveitar do pool), SELECT 1, listar subgrupos."""
     import config
-    medidas = {"fb_host": config.DB_CONFIG["host"], "fb_port": config.DB_CONFIG["port"]}
+    medidas = {"fb_host": config.DB_CONFIG["host"], "fb_port": config.DB_CONFIG["port"],
+               "driver_em_uso": db.DRIVER, "teste_drivers": db.testar_drivers()}
     t0 = time.perf_counter()
     try:
         conn = db.conectar()

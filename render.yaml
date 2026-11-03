@@ -34,6 +34,9 @@ services:
         value: ASCII
       - key: FB_POOL_SIZE
         value: "5"
+      # Driver Python puro: a fbclient nativa não negocia com o 2.5 pelo túnel a partir do Render
+      - key: DB_DRIVER
+        value: firebirdsql
       # SFTP da Porto (só usado se o usuário marcar o envio na tela da Assistência)
       - key: SFTP_HOST
         value: sftp.portoseguro.com.br
