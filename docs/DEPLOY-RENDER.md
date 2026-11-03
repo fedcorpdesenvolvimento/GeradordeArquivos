@@ -61,8 +61,8 @@ serviço é criado à mão; o `render.yaml` fica como referência das variáveis
 4. Preencher:
    | Campo | Valor |
    |---|---|
-   | Name | `envioporto-web` (vira `https://envioporto-web.onrender.com`) |
-   | Region | Ohio (US East) — qualquer uma serve; não há Brasil |
+   | Name | `envioporto` (vira `https://envioporto.onrender.com`) |
+   | Region | **Oregon (US West)** — obrigatório: é a região do CertificadosGerador, cujos IPs de saída são os liberados no túnel ngrok. Em Ohio a borda do ngrok fecha a conexão (ver §7, 03/11/2026) |
    | Branch | **`web-render`** |
    | Root Directory | (em branco) |
    | Language / Runtime | **Docker** (o Render detecta o `Dockerfile`; se oferecer "Python 3", troque para Docker) |
@@ -92,12 +92,24 @@ serviço é criado à mão; o `render.yaml` fica como referência das variáveis
 6. *Advanced* > **Health Check Path**: `/api/saude`. Auto-Deploy: Yes.
 7. **Create Web Service**. O build (Docker: `libfbclient2`, pip, testes sem banco)
    leva alguns minutos. No log, esperar `Uvicorn running on http://0.0.0.0:<porta>`.
-8. Abrir `https://envioporto-web.onrender.com/` → tela de login.
+8. Abrir `https://envioporto.onrender.com/` → tela de login.
 
 Limitações do plano Free: o serviço **dorme após 15 min sem uso** e a primeira
 chamada seguinte leva ~1 min para acordar; 512 MB de RAM (VIDA RJ e BOAT cabem,
 mas não gere dois trabalhos pesados ao mesmo tempo); sem disco persistente (os
 arquivos já eram efêmeros); 750 h/mês de uso.
+
+### 4a. Histórico: serviço em Ohio recriado em Oregon (03/11/2026)
+
+O primeiro serviço (`envioporto-web`, Ohio) nunca alcançou o Firebird: o túnel
+aceitava o TCP e fechava antes do protocolo (`sonda_tcp = fechado_pelo_servidor`),
+com `-923` no fdb e `Can not recv() packets` no firebirdsql. O CertificadosGerador,
+no mesmo túnel e mesma porta, conecta — a única diferença era a região (Oregon).
+Os IPs de saída do Render são por região; os de Oregon são os aceitos pelo ngrok.
+Solução: serviço `envioporto` criado em Oregon pela API do Render com as mesmas
+variáveis (`WEB_SEGREDO_SESSAO` preenchida), diagnóstico OK nos dois drivers, e o
+serviço de Ohio **suspenso** (não apagado) no painel. Se um dia for preciso usar
+outra região, liberar os IPs de saída dela no ngrok antes.
 
 ## 5. O que muda em relação ao desktop
 

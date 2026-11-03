@@ -3,11 +3,11 @@
 # Os valores marcados sync: false são preenchidos no painel do Render (nunca aqui).
 services:
   - type: web
-    name: envioporto-web
+    name: envioporto
     runtime: docker
     dockerfilePath: ./Dockerfile
     branch: web-render
-    region: ohio
+    region: oregon   # mesma região do CertificadosGerador: IPs de saída aceitos pelo túnel ngrok
     plan: free
     healthCheckPath: /api/saude
     autoDeploy: true
