@@ -119,6 +119,41 @@ def _criar_conexao(charset: str):
     return _conectar_com(DRIVER, charset)
 
 
+def sondar_tcp(host: str | None = None, port: int | None = None, espera_s: float = 3.0) -> dict:
+    """Diagnóstico de rede: abre o socket e observa o que acontece ANTES de
+    qualquer protocolo Firebird. O Firebird fica em silêncio esperando o
+    cliente falar; se o outro lado fecha sozinho ("fechado_pelo_servidor"),
+    quem recusou foi a borda do túnel (ngrok) ou um firewall — não o banco."""
+    import socket, time
+    host = host or DB_CONFIG['host']
+    port = port or DB_CONFIG['port']
+    saida = {"host": host, "port": port}
+    t0 = time.perf_counter()
+    try:
+        s = socket.create_connection((host, port), timeout=TIMEOUT_ALCANCE_S)
+    except OSError as e:
+        saida.update(resultado="tcp_recusado", detalhe=str(e),
+                     segundos=round(time.perf_counter() - t0, 3))
+        return saida
+    saida["conexao_s"] = round(time.perf_counter() - t0, 3)
+    try:
+        s.settimeout(espera_s)
+        t1 = time.perf_counter()
+        dado = s.recv(64)
+        saida["apos_s"] = round(time.perf_counter() - t1, 3)
+        if dado:
+            saida.update(resultado="servidor_falou_primeiro", bytes=len(dado), hex=dado[:16].hex())
+        else:
+            saida["resultado"] = "fechado_pelo_servidor"
+    except socket.timeout:
+        saida["resultado"] = "silencio"   # esperado: o Firebird aguarda o op_connect
+    except OSError as e:
+        saida.update(resultado="erro_recv", detalhe=str(e))
+    finally:
+        s.close()
+    return saida
+
+
 def testar_drivers(charset: str | None = None) -> dict:
     """Diagnóstico: tenta abrir uma conexão com cada driver e devolve
     {driver: {"ok": bool, "segundos": float, "erro": str|None}}."""
