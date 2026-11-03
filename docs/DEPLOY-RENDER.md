@@ -49,20 +49,55 @@ Dois usuários fixos, sem cadastro em banco (decisão de 03/11/2026):
 
 Sessão em cookie assinado (8 h), 10 tentativas erradas por e-mail+IP em 15 min bloqueiam.
 
-## 4. Subir
+## 4. Subir (plano Free — criação manual, sem Blueprint)
 
-1. `git push origin web-render` (a branch já existe no GitHub).
-2. render.com > **New > Blueprint** > repositório `fedcorpdesenvolvimento/GeradordeArquivos`
-   > branch `web-render`. O Render lê o `render.yaml` e pede os valores `sync: false`:
-   `WEB_SENHA`, `FB_HOST`, `FB_PORT`, `FB_DATABASE`, `FB_USER`, `FB_PASSWORD`,
-   `SFTP_FALLBACK_IP`, `SFTP_USER`, `SFTP_PASSWORD`.
-   - `FB_DATABASE` é o caminho **no servidor Firebird** (`E:\SISTEMA\BASE_CHEQUE\BASE\FATURA.GDB`), igual ao `.env`.
-   - `FB_HOST`/`FB_PORT` = endereço do túnel (opção A ou B acima).
-3. O build instala `libfbclient2`, as dependências e roda os testes sem banco
-   (`tests.test_gerador_funeral`, `tests.test_web`). Se falharem, o deploy para.
-4. Quando o log mostrar `Uvicorn running on http://0.0.0.0:<porta>`, abrir
-   `https://envioporto-web.onrender.com/` → tela de login. `/api/saude` responde
-   `{"ok": true, "usuarios_configurados": true}` sem login.
+O Blueprint (`render.yaml`) só está disponível em planos pagos. No plano Free o
+serviço é criado à mão; o `render.yaml` fica como referência das variáveis.
+
+1. **Apague** o serviço antigo (criado como runtime Python com `gunicorn`).
+2. Dashboard > **New +** > **Web Service** (card "Web Services" da tela "Create a new Service").
+3. *Source Code*: conectar a conta GitHub (se ainda não estiver) e escolher o
+   repositório `fedcorpdesenvolvimento/GeradordeArquivos`.
+4. Preencher:
+   | Campo | Valor |
+   |---|---|
+   | Name | `envioporto-web` (vira `https://envioporto-web.onrender.com`) |
+   | Region | Ohio (US East) — qualquer uma serve; não há Brasil |
+   | Branch | **`web-render`** |
+   | Root Directory | (em branco) |
+   | Language / Runtime | **Docker** (o Render detecta o `Dockerfile`; se oferecer "Python 3", troque para Docker) |
+   | Dockerfile Path | `./Dockerfile` |
+   | Instance Type | **Free** |
+5. *Environment Variables* (botão **Add Environment Variable**; os nomes são os do `render.yaml`):
+
+   | Variável | Valor |
+   |---|---|
+   | `WEB_USUARIOS` | `alberto@grupofedcorp.com.br,beneficiosocial@grupofedcorp.com.br` |
+   | `WEB_SENHA` | a senha de acesso (a mesma do `.env` local) |
+   | `WEB_SEGREDO_SESSAO` | qualquer texto longo aleatório (ou use **Generate** no painel) |
+   | `FB_HOST` | host do túnel ngrok (ex.: `0.tcp.sa.ngrok.io`) ou IP público do roteador |
+   | `FB_PORT` | porta do túnel (ex.: `14523`) |
+   | `FB_DATABASE` | `E:\SISTEMA\BASE_CHEQUE\BASE\FATURA.GDB` (caminho no servidor Firebird) |
+   | `FB_USER` / `FB_PASSWORD` | usuário e senha do Firebird |
+   | `FB_CHARSET` | `ASCII` |
+   | `FB_POOL_SIZE` | `5` |
+   | `SFTP_HOST` | `sftp.portoseguro.com.br` |
+   | `SFTP_FALLBACK_IP` | IP do SFTP da Porto (o do `.env`) |
+   | `SFTP_PORT` | `2022` |
+   | `SFTP_USER` / `SFTP_PASSWORD` | credenciais do SFTP |
+   | `SFTP_DESTINO` | `/Porto/Remessa` |
+
+   `PORT` não precisa: o Render injeta. Sem as `FB_*`/`SFTP_*` o app **não sobe**
+   (`config.py` aborta avisando qual falta — é intencional).
+6. *Advanced* > **Health Check Path**: `/api/saude`. Auto-Deploy: Yes.
+7. **Create Web Service**. O build (Docker: `libfbclient2`, pip, testes sem banco)
+   leva alguns minutos. No log, esperar `Uvicorn running on http://0.0.0.0:<porta>`.
+8. Abrir `https://envioporto-web.onrender.com/` → tela de login.
+
+Limitações do plano Free: o serviço **dorme após 15 min sem uso** e a primeira
+chamada seguinte leva ~1 min para acordar; 512 MB de RAM (VIDA RJ e BOAT cabem,
+mas não gere dois trabalhos pesados ao mesmo tempo); sem disco persistente (os
+arquivos já eram efêmeros); 750 h/mês de uso.
 
 ## 5. O que muda em relação ao desktop
 
@@ -93,7 +128,7 @@ Testes: `python -m unittest discover -s tests` (os de integração exigem
 
 | Sintoma | Causa provável | Onde olhar |
 |---|---|---|
-| `gunicorn: command not found` | serviço criado como runtime Python | recriar via Blueprint (Docker) |
+| `gunicorn: command not found` | serviço criado como runtime Python | recriar como Web Service com Language = Docker (§4) |
 | Login diz "Nenhum usuário configurado" | `WEB_USUARIOS`/`WEB_SENHA` vazios | Environment do serviço |
 | Página de trabalho com `[ERRO] ... Unable to complete network request to host` | túnel fechado, porta errada | ngrok / `FB_HOST`, `FB_PORT` |
 | Erro -802 string truncation | procedure do banco | `queries/alter_gera_rel_pla_sistema*.sql` (já aplicados em 03/11/2026) |
