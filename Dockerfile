@@ -24,7 +24,9 @@ COPY . .
 
 # Testes unitários no build (sem banco): se falhar, o deploy para aqui.
 # (só os testes sem tkinter: a imagem slim não tem Tk e o desktop não roda aqui)
-RUN python -m unittest tests.test_gerador_funeral tests.test_web
+# As variáveis do Render não existem durante o build e config.py aborta sem elas,
+# então este passo recebe valores fictícios — valem só aqui, não na execução.
+RUN FB_HOST=build FB_DATABASE=build FB_USER=build FB_PASSWORD=build     SFTP_HOST=build SFTP_FALLBACK_IP=127.0.0.1 SFTP_USER=build SFTP_PASSWORD=build     python -m unittest tests.test_gerador_funeral tests.test_web
 
 RUN mkdir -p /app/saida
 ENV WEB_PASTA_SAIDA=/app/saida
