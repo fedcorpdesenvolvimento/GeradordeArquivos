@@ -496,6 +496,10 @@ apontar duplicidade; nesse caso basta voltar o `OR` das três queries.
 
 ## 7d. Versão web (branch `web-render`, 03/11/2026)
 
+- **Botão Início** (04/11/2026): o cabeçalho de `base.html` mostra `⌂ Início`
+  (volta ao menu `/`) em toda tela que não seja o próprio menu — a condição é
+  `request.url.path != '/'`, por isso `_pagina()` sempre passa `request`.
+
 Pasta local `U:\--2021-EnvioPorto-web` (git worktree da branch
 `web-render`). A `main` continua sendo o desktop em uso. Estrutura:
 

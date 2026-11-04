@@ -10,7 +10,9 @@
 <header>
   <h1><a href="/" style="text-decoration:none;color:inherit">SISTEMA DE ENVIO PORTO SEGURO</a></h1>
   {% if usuario %}
-  <div class="usuario">{{ usuario }} &nbsp;|&nbsp;
+  <div class="usuario">
+    {% if request.url.path != '/' %}<a class="botao inicio" href="/" title="Voltar ao menu principal">&#8962; Início</a>{% endif %}
+    {{ usuario }} &nbsp;|&nbsp;
     <form method="post" action="/logout"><button class="cinza" type="submit">Sair</button></form>
   </div>
   {% endif %}
