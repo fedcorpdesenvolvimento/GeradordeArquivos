@@ -37,7 +37,10 @@ atualizada a cada mudança: ela é o material dos futuros programadores.
   anterior** (padrão de vigência), sempre editáveis.
 - **SFTP Porto**: o DNS da rede local NÃO resolve `sftp.portoseguro.com.br`;
   o código usa fallback pelo IP (config.py). Upload sempre com `.part` +
-  verificação de tamanho + rename. Nunca enviar arquivo de teste para
+  verificação de tamanho + rename; o rename é repetido por até 3 min
+  quando o servidor responde "Resource busy / in progress" (13/11/2026), e
+  um `.part` completo que sobrou é só renomeado no próximo envio.
+  Nunca enviar arquivo de teste para
   `/Porto/Remessa` sem o usuário confirmar — tudo que cai lá pode ser
   processado pela seguradora.
 - **GERA PORTO DENTAL**: implementado em 27/08/2026 — fluxo de DUAS etapas

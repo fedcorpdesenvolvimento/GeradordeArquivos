@@ -47,7 +47,7 @@ COPY . .
 # então este passo recebe valores fictícios — valem só aqui, não na execução.
 RUN FB_HOST=build FB_DATABASE=build FB_USER=build FB_PASSWORD=build \
     SFTP_HOST=build SFTP_FALLBACK_IP=127.0.0.1 SFTP_USER=build SFTP_PASSWORD=build \
-    python -m unittest tests.test_gerador_funeral tests.test_web
+    python -m unittest tests.test_gerador_funeral tests.test_web tests.test_envio_sftp
 
 RUN mkdir -p /app/saida
 ENV WEB_PASTA_SAIDA=/app/saida

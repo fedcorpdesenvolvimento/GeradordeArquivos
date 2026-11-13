@@ -372,6 +372,17 @@ para a janela não travar; o log é entregue por `queue.Queue`.
 - O upload sobe como `arquivo.part`, confere o tamanho e só então renomeia
   para o nome final — a Porto nunca vê arquivo incompleto. Qualquer falha
   vira exceção mostrada no log da tela.
+- **Servidor "ocupado" no rename (13/11/2026):** logo após o upload, o MFT
+  da Porto ainda considera o `.part` "em andamento" e responde
+  `Resource busy. Failed to rename ... because the file is currently in
+  progress`. O arquivo está inteiro; só o nome final falta. O módulo repete
+  o rename a cada 10 s por até 3 min (`TENTATIVAS_RENAME` x `PAUSA_RENAME_S`)
+  só para esse erro (`_servidor_ocupado`); outros erros sobem na hora. Se
+  esgotar, a exceção explica que basta clicar em enviar mais tarde: ao
+  encontrar um `.part` com o **mesmo tamanho** do arquivo local, o envio
+  pula o upload e tenta só o rename; `.part` com tamanho diferente é
+  removido e o upload refeito. Testes em `tests/test_envio_sftp.py`
+  (servidor simulado, sem rede). Vale igual na versão web.
 
 ### Estado atual
 
