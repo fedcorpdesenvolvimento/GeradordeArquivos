@@ -291,6 +291,12 @@ Portanto:
   `.part`, o tamanho é conferido e só então o arquivo recebe o nome final.
   Se o log mostrar "[ERRO] Tamanho divergente ... Upload descartado.", nada
   ficou no servidor — tente de novo;
+- às vezes o servidor da Porto demora a "soltar" o arquivo depois do
+  upload e o log mostra "servidor ainda processando o arquivo (n/18)". É
+  normal: o sistema espera e tenta de novo por até 3 minutos. Se mesmo assim
+  der "[ERRO] O arquivo subiu inteiro como ....part ...", espere alguns
+  minutos e clique em enviar de novo — ele não sobe o arquivo outra vez, só
+  conclui o nome;
 - o envio não pede confirmação: a caixa marcada já é a confirmação.
 
 ### 3.5 Mensagens e o que fazer
@@ -306,6 +312,7 @@ Portanto:
 | Log "[ERRO] Código N ...: a query ... não retorna as colunas [...]" | Alguém alterou a consulta e quebrou o layout — avise o programador. |
 | Log "[ERRO] ... getaddrinfo ... / Name or service not known / timed out" (no envio) | Falha de rede ou DNS no SFTP — ver §8. O arquivo local foi gerado; só o envio falhou. |
 | Log "[ERRO] Authentication failed" | Usuário/senha do SFTP inválidos no `.env` — avise quem instalou. |
+| Log "[ERRO] O arquivo subiu inteiro como ....part, mas o servidor da Porto não liberou o nome final" | O servidor da Porto ficou "ocupado" por mais de 3 min. Espere e envie de novo: só o nome será concluído. Se persistir por horas, avise a Porto (o `.part` está lá, completo). |
 | Log "[ERRO] Permission denied: '...xlsx'" | O Excel está aberto com o arquivo anterior. Feche e gere de novo. |
 
 ---
