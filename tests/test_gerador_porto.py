@@ -126,10 +126,28 @@ class GeradorCsvTests(unittest.TestCase):
         self.assertIn(b'"DUDA; FILHA"', bruto)
 
     def test_limite_vale_para_a_soma_das_queries(self):
-        por_query = [[linha(f"N{n}", "1") for n in range(5)], [linha("N9", "9")]]
+        por_query = [[linha(f"N{n}", str(n + 1)) for n in range(5)], [linha("N9", "9")]]
         caminho, resultado = self._gerar(por_query, {1: 3})
         self.assertEqual(resultado, {1: 3})
         self.assertEqual(len(self._ler(caminho)), 4)
+
+    def test_mesmo_documento_no_mesmo_produto_sai_uma_vez(self):
+        por_query = [[linha("ANA", "111.655.777-04"), linha("BIA", "23081740720"),
+                      linha("ANA DE NOVO", "11165577704")],
+                     [linha("ANA NA 15008", "11165577704"), linha("SEM DOC 1", None),
+                      linha("SEM DOC 2", "")],
+                     [linha("ANA NO AUTO", "11165577704")]]
+        caminho, resultado = self._gerar(por_query, {1: None, 2: None})
+        self.assertEqual(resultado, {1: 4, 2: 1})   # ANA uma vez no 1; sem documento todas ficam
+        nomes = [(l[1], l[7]) for l in self._ler(caminho)[1:]]
+        self.assertEqual(nomes, [("1", "ANA"), ("1", "BIA"), ("1", "SEM DOC 1"), ("1", "SEM DOC 2"),
+                                 ("2", "ANA NO AUTO")])   # outro produto pode repetir
+
+    def test_limite_conta_linhas_gravadas_e_nao_duplicadas(self):
+        por_query = [[linha("A", "1"), linha("A2", "1"), linha("B", "2"), linha("C", "3")], []]
+        caminho, resultado = self._gerar(por_query, {1: 3})
+        self.assertEqual(resultado, {1: 3})
+        self.assertEqual([l[7] for l in self._ler(caminho)[1:]], ["A", "B", "C"])
 
     def test_sem_selecao_recusa(self):
         with self.assertRaises(ValueError):

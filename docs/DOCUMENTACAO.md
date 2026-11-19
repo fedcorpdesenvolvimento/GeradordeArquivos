@@ -348,6 +348,12 @@ para a janela não travar; o log é entregue por `queue.Queue`.
 - **Nome do arquivo sem espaços nem traços** (exigência da Porto):
   `relacaoenvioportoMMYYYY.csv` (`nome_arquivo()`).
 - Os produtos saem empilhados num único arquivo, na ordem 1, 2, 3.
+- **Sem duplicidade de documento dentro do mesmo produto** (pedido de
+  19/11/2026): o mesmo CPF/CNPJ sai uma vez só por `codigoPlano` (primeira
+  ocorrência, na ordem das queries — no Residencial, a query da 15008 vem
+  depois). Linhas sem documento são todas mantidas. O mesmo documento pode
+  aparecer em produtos diferentes. O log informa quantas foram removidas, e
+  o limite N conta linhas gravadas, não lidas.
 - Endereço, nascimento e inquilino **não** vão mais: "as demais informações
   não são necessárias" (usuário, 19/11/2026).
 

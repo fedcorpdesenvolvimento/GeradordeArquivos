@@ -20,6 +20,9 @@ cabeçalho na primeira linha, nove colunas:
     nomeSocial     igual a nome
 
 O nome do arquivo não pode ter espaços nem traços (exigência da Porto).
+Dentro de cada codigoPlano o mesmo documento (CPF/CNPJ) sai uma vez só —
+fica a primeira ocorrência, na ordem das queries (pedido de 19/11/2026).
+O mesmo documento pode aparecer em produtos diferentes.
 Das queries só NOME e CPF_CNPJ são usados; as demais colunas (endereço,
 inquilino etc.) continuam vindo mas são ignoradas.
 """
@@ -178,6 +181,8 @@ def gerar_planilha(destino_pasta: str, inivig: datetime.date, selecao: dict,
                 limite = selecao[prod["codigo"]]
                 codigo = prod["codigo"]
                 gravadas = 0
+                vistos = set()      # documentos já gravados neste produto
+                duplicadas = 0
 
                 for query_file in prod["query_files"]:
                     if limite is not None and gravadas >= limite:
@@ -199,26 +204,33 @@ def gerar_planilha(destino_pasta: str, inivig: datetime.date, selecao: dict,
                     i_nome = nomes_query.index("NOME")
                     i_doc = nomes_query.index("CPF_CNPJ")
 
-                    while True:
-                        if limite is not None:
-                            restante = limite - gravadas
-                            if restante <= 0:
-                                break
-                            bloco = cur.fetchmany(min(FETCH_BLOCO, restante))
-                        else:
-                            bloco = cur.fetchmany(FETCH_BLOCO)
+                    while limite is None or gravadas < limite:
+                        bloco = cur.fetchmany(FETCH_BLOCO)
                         if not bloco:
                             break
-                        escritor.writerows(
-                            montar_linha(codigo, linha[i_nome], linha[i_doc], inivig)
-                            for linha in bloco)
-                        gravadas += len(bloco)
+                        saida = []
+                        for linha in bloco:
+                            if limite is not None and gravadas + len(saida) >= limite:
+                                break
+                            doc = documento(linha[i_doc])[1]
+                            # Mesmo documento no mesmo produto só vai uma vez
+                            # (primeira ocorrência); sem documento não dá para
+                            # saber se é a mesma pessoa, então todas ficam.
+                            if doc:
+                                if doc in vistos:
+                                    duplicadas += 1
+                                    continue
+                                vistos.add(doc)
+                            saida.append(montar_linha(codigo, linha[i_nome], linha[i_doc], inivig))
+                        escritor.writerows(saida)
+                        gravadas += len(saida)
                         log(f"  ... {gravadas} linhas", transiente=True)
                     cur.close()
 
                 resultado[codigo] = gravadas
                 extra = f" (limite {limite})" if limite is not None else " (base toda)"
-                log(f"Código {codigo} - {prod['nome']}: {gravadas} linhas geradas{extra}")
+                log(f"Código {codigo} - {prod['nome']}: {gravadas} linhas geradas{extra}; "
+                    f"{duplicadas} duplicidade(s) de documento removida(s)")
     finally:
         con.close()
 

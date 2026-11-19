@@ -241,6 +241,10 @@ pedir, envia o arquivo para o SFTP da Porto. `MMAAAA` é o mês/ano da data
 de vigência (ex.: 01/10/2026 gera `relacaoenvioporto102026.csv`). O nome
 não tem espaços nem traços porque a Porto exige assim.
 
+Dentro de cada produto, um mesmo CPF/CNPJ sai uma única vez (a primeira
+ocorrência); o log mostra quantas repetições foram descartadas. A mesma
+pessoa pode aparecer em produtos diferentes.
+
 Para conferir, abra o CSV no Excel: ele separa as colunas sozinho e mostra
 os acentos certos. Não salve por cima a partir do Excel (ele pode trocar o
 formato); se precisar alterar algo, gere de novo.
