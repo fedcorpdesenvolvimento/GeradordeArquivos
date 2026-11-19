@@ -19,7 +19,7 @@ o texto "Selecione o módulo:" e cinco botões:
 | Botão do menu | O que gera | Nome do arquivo |
 |---|---|---|
 | **SUBGRUPOS DE VIDA** | Relatório de segurados de Vida por subgrupo (Porto) | `Subgrupo_<código>_Relatorio_<dd-mm-aaaa>.xlsx` |
-| **PORTO ASSISTÊNCIA** | Relação mensal Residencial / Auto / Empresarial (com envio opcional por SFTP) | `relacao-envio-porto-<MMAAAA>.xlsx` |
+| **PORTO ASSISTÊNCIA** | Relação mensal Residencial / Auto / Empresarial em CSV (com envio opcional por SFTP) | `relacaoenvioporto<MMAAAA>.csv` |
 | **GERA PORTO DENTAL** | Segurados das faturas de Porto Dental | `portodental-<MMAAAA>.xlsx` |
 | **GERAR DENTAL SEMPRE ODONTO** (botão azul) | Segurados das faturas de Sempre Odonto | `sempreodonto-<MMAAAA>.xlsx` |
 | **GERAR ARQUIVO FUNERAL** | Segurados de Vida com cobertura Funeral/Cerimonial | `funeral-<MMAAAA>.xlsx` |
@@ -231,30 +231,37 @@ Janela: **PORTO ASSISTÊNCIA — Geração e Envio da Relação**.
 
 ### 3.1 O que faz
 
-Gera a planilha mensal `relacao-envio-porto-<MMAAAA>.xlsx` com três abas
-(Código 1 - Residencial, Código 2 - Auto, Código 3 - Empresarial), no layout
-que a Porto espera (12 colunas: ENDERECO, NUMERO, COMPLEMENTO, CEP, BAIRRO,
-CIDADE, SIGLAESTADO, NOME, CPF_CNPJ, DATANASCIMENTO, NOMEINQUILINO,
-CPFCNPJINQUILINO), e, se você pedir, envia o arquivo para o SFTP da Porto.
-`MMAAAA` é o mês/ano da data de vigência (ex.: 01/10/2026 gera `...-102026`).
+Gera o arquivo mensal `relacaoenvioporto<MMAAAA>.csv` (um único arquivo
+CSV, separado por ponto e vírgula) no layout que a Porto enviou em
+19/11/2026, com as colunas status (sempre `A`), codigoPlano (1 Residencial,
+2 Auto, 3 Empresarial), inicioVigencia (a data da tela), finalVigencia (um
+ano depois), tipoDocumento (CPF ou CNPJ), documento, cpfCnpj, nome e
+nomeSocial. Os três produtos saem empilhados no mesmo arquivo. Se você
+pedir, envia o arquivo para o SFTP da Porto. `MMAAAA` é o mês/ano da data
+de vigência (ex.: 01/10/2026 gera `relacaoenvioporto102026.csv`). O nome
+não tem espaços nem traços porque a Porto exige assim.
+
+Para conferir, abra o CSV no Excel: ele separa as colunas sozinho e mostra
+os acentos certos. Não salve por cima a partir do Excel (ele pode trocar o
+formato); se precisar alterar algo, gere de novo.
 
 ### 3.2 Campos e botões da tela
 
-- **Pasta onde salvar a planilha:** campo de texto + botão **Procurar...**.
+- **Pasta onde salvar o arquivo CSV:** campo de texto + botão **Procurar...**.
 - **Data de início de vigência (:inivig das queries):** calendário.
 - **Produtos:** uma linha por produto, cada uma com a caixa
   **Código 1 - Residencial** / **Código 2 - Auto** / **Código 3 - Empresarial**
-  (marcada = entra na planilha) e a escolha **Base toda** ou **Quantidade:**
+  (marcada = entra no arquivo) e a escolha **Base toda** ou **Quantidade:**
   seguida de um campo numérico (padrão 10000) e a palavra "linhas".
   Com **Quantidade**, só as N primeiras linhas do produto entram — use para
   gerar amostras de teste; para o envio oficial use **Base toda**.
 - Caixa **Enviar para a Porto (SFTP /Porto/Remessa) após gerar**.
-- Botão **Gerar Planilha** (verde).
+- Botão **Gerar Arquivo CSV** (verde).
 - **Log:** área de texto com o andamento.
 
 Todas as escolhas (pasta, produtos, quantidades e **inclusive a caixa de
 envio**) ficam gravadas e voltam preenchidas na próxima abertura. Por isso,
-**sempre confira a caixa de envio antes de clicar em Gerar Planilha**.
+**sempre confira a caixa de envio antes de clicar em Gerar Arquivo CSV**.
 
 ### 3.3 Passo a passo
 
@@ -267,7 +274,7 @@ envio**) ficam gravadas e voltam preenchidas na próxima abertura. Por isso,
      antes);
    - **marcada**: depois de gerar, o arquivo é enviado automaticamente para a
      pasta `/Porto/Remessa` do SFTP da Porto Seguro.
-4. Clique em **Gerar Planilha**. O botão fica desabilitado até o fim.
+4. Clique em **Gerar Arquivo CSV**. O botão fica desabilitado até o fim.
 5. Acompanhe o log: para cada produto aparece "Código N - Nome: executando
    <arquivo>.sql...", um contador "... N linhas" e ao final "Código N - Nome:
    N linhas geradas (base toda)" ou "(limite N)". Depois:
@@ -313,7 +320,7 @@ Portanto:
 | Log "[ERRO] ... getaddrinfo ... / Name or service not known / timed out" (no envio) | Falha de rede ou DNS no SFTP — ver §8. O arquivo local foi gerado; só o envio falhou. |
 | Log "[ERRO] Authentication failed" | Usuário/senha do SFTP inválidos no `.env` — avise quem instalou. |
 | Log "[ERRO] O arquivo subiu inteiro como ....part, mas o servidor da Porto não liberou o nome final" | O servidor da Porto ficou "ocupado" por mais de 3 min. Espere e envie de novo: só o nome será concluído. Se persistir por horas, avise a Porto (o `.part` está lá, completo). |
-| Log "[ERRO] Permission denied: '...xlsx'" | O Excel está aberto com o arquivo anterior. Feche e gere de novo. |
+| Log "[ERRO] Permission denied: '...csv'" | O Excel está aberto com o arquivo anterior. Feche e gere de novo. |
 
 ---
 

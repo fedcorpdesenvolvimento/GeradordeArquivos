@@ -29,10 +29,15 @@ atualizada a cada mudança: ela é o material dos futuros programadores.
 - **SUBGRUPOS DE VIDA**: lógica migrada intacta de
   `U:\--2021\02-gerador_planilhas_firebird\main.py` — não "melhorar" queries
   nem fluxo sem o usuário pedir.
-- **PORTO ASSISTÊNCIA**: nomes das abas do Excel reproduzem o modelo manual
-  byte a byte (`"Código 2 - Auto "` com espaço final, `"Código 3 -  Empresarial"`
-  com espaço duplo) — NUNCA corrigir. Queries em `queries/*.sql` com parâmetro
-  `:inivig`; mapeamento query→aba documentado na DOCUMENTACAO.md §5.
+- **PORTO ASSISTÊNCIA**: desde 19/11/2026 gera UM arquivo **CSV** no layout
+  enviado pela Porto (`status;codigoPlano;inicioVigencia;finalVigencia;
+  tipoDocumento;documento;cpfCnpj;nome;nomeSocial`, `;` e Windows-1252),
+  nome `relacaoenvioportoMMYYYY.csv` (sem espaços nem traços — exigência da
+  Porto), status sempre `A`, vigência de 1 ano. As queries continuam as
+  mesmas (`queries/*.sql`, parâmetro `:inivig`); só NOME e CPF_CNPJ são
+  usados. O .xlsx de três abas é histórico (os nomes das abas, com os
+  espaços originais, ficaram só como rótulo em `PRODUTOS`). Ver
+  DOCUMENTACAO.md §5.
 - **Datas**: calendários abrem pré-configurados com o **dia 01 do mês
   anterior** (padrão de vigência), sempre editáveis.
 - **SFTP Porto**: o DNS da rede local NÃO resolve `sftp.portoseguro.com.br`;
