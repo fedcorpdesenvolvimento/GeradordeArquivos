@@ -307,82 +307,78 @@ subgrupo preenchido** (`apo.subporto` nulo ou vazio), ignorando apólices
 
 ## 5. Módulo PORTO ASSISTÊNCIA (`modulos/porto_assistencia.py`)
 
-Substitui o processo manual de montar a planilha
-`relacao-envio-porto-MMYYYY.xlsx` e subi-la por SFTP.
+Substitui o processo manual de montar a relação mensal e subi-la por SFTP.
+Desde **19/11/2026** o arquivo é um **CSV** no layout que a Porto enviou
+(`relacaoenvioportoMMYYYY.csv`); até então era o `.xlsx` de três abas do
+modelo manual (`relacao-envio-porto-MMYYYY.xlsx`).
 
 ### Tela única
 
-- **Pasta onde salvar** a planilha (persistida entre aberturas).
+- **Pasta onde salvar** o arquivo (persistida entre aberturas).
 - **Data de início de vigência** — pré-preenchida com o **dia 01 do mês
-  anterior**, editável. Alimenta o parâmetro `:inivig` de todas as queries
-  e define a competência do nome do arquivo (`relacao-envio-porto-MMYYYY.xlsx`
-  usa mês/ano dessa data).
+  anterior**, editável. Alimenta o parâmetro `:inivig` de todas as queries,
+  as colunas `inicioVigencia`/`finalVigencia` e a competência do nome do
+  arquivo (mês/ano dessa data).
 - **Por produto** (Código 1 - Residencial, 2 - Auto, 3 - Empresarial):
   incluir ou não, e **Base toda** × **Quantidade N** — com N informado,
-  somente as N primeiras linhas do resultado da query entram na aba.
+  somente as N primeiras linhas do resultado da query entram.
 - Checkbox **enviar por SFTP** após gerar.
 - **Log em tela** com o total de linhas geradas por produto e o total geral.
 
 As escolhas ficam em `porto_assistencia.json`. A geração roda em thread
 para a janela não travar; o log é entregue por `queue.Queue`.
 
+### Layout do CSV (modelo da Porto, 19/11/2026)
+
+| Coluna | Conteúdo |
+|---|---|
+| `status` | sempre `A` (ativo) |
+| `codigoPlano` | `1` Residencial, `2` Auto, `3` Empresarial |
+| `inicioVigencia` | data da tela, `DD/MM/AAAA` |
+| `finalVigencia` | mesma data um ano depois (`fim_vigencia`; 29/02 vira 28/02) |
+| `tipoDocumento` | `CPF` (até 11 dígitos) ou `CNPJ` (mais de 11); vazio se não há documento |
+| `documento` | só dígitos, zeros à esquerda até 11 (CPF) ou 14 (CNPJ) |
+| `cpfCnpj` | igual a `documento` |
+| `nome` | `NOME` da query, sem espaços nas pontas |
+| `nomeSocial` | igual a `nome` |
+
+- Separador `;`, codificação **Windows-1252** (`errors="replace"`: caractere
+  fora da tabela vira `?` em vez de derrubar a geração), cabeçalho na
+  primeira linha, campos com `;` entre aspas (`csv.QUOTE_MINIMAL`).
+- **Nome do arquivo sem espaços nem traços** (exigência da Porto):
+  `relacaoenvioportoMMYYYY.csv` (`nome_arquivo()`).
+- Os produtos saem empilhados num único arquivo, na ordem 1, 2, 3.
+- Endereço, nascimento e inquilino **não** vão mais: "as demais informações
+  não são necessárias" (usuário, 19/11/2026).
+
 ### Núcleo de geração (`modulos/gerador_porto.py`)
 
-- A lista `PRODUTOS` define, por produto: código, **nome exato da aba** e
-  colunas esperadas. **ATENÇÃO:** os nomes das abas reproduzem o modelo
-  manual byte a byte — `"Código 2 - Auto "` tem espaço no final e
-  `"Código 3 -  Empresarial"` tem espaço duplo. Não "corrigir": a Porto
-  pode depender disso.
+- A lista `PRODUTOS` define, por produto: código, nome, queries e colunas
+  obrigatórias da query (`COLUNAS_QUERY` = `NOME`, `CPF_CNPJ`). O campo
+  `aba` guarda o nome que o produto tinha na planilha antiga (com os espaços
+  originais) e hoje é só rótulo.
 - As queries ficam em `queries/*.sql` e podem ser ajustadas sem tocar no
   código (fonte original: `querys-porto-assit.sql`, na raiz do projeto).
-  Mapeamento query → aba:
+  Mapeamento query → código:
   - `codigo1_residencial_1.sql` (residenciais sem a apólice 15008) e
-    `codigo1_residencial_2.sql` (apólice 15008) → aba **Código 1 - Residencial**
-    (as duas alimentam a mesma aba, em sequência);
-  - `codigo2_auto.sql` (apólices `BOAT%` de `vida_segurados_mov`) → aba
-    **Código 2 - Auto**;
-  - `codigo3_empresarial.sql` (empresariais de `segurados_inc`) → aba
-    **Código 3 - Empresarial**.
-- **As três abas usam o mesmo layout de 12 colunas** (a pedido do usuário,
-  08/2026): `ENDERECO`, `NUMERO`, `COMPLEMENTO`, `CEP`, `BAIRRO`, `CIDADE`,
-  `SIGLAESTADO`, `NOME`, `CPF_CNPJ`, `DATANASCIMENTO`, `NOMEINQUILINO`,
-  `CPFCNPJINQUILINO`. Colunas extras que as queries retornam (`PRODUTO`,
-  `APOLICE`, `ADMINISTRADORA`, `ADM`) são ignoradas pelo gerador.
+    `codigo1_residencial_2.sql` (apólice 15008) → **código 1** (as duas em
+    sequência);
+  - `codigo2_auto.sql` (apólices `BOAT%` de `vida_segurados_mov`) → **código 2**;
+  - `codigo3_empresarial.sql` (empresariais de `segurados_inc`) → **código 3**.
+- As queries continuam devolvendo as 12 colunas do layout antigo (e extras
+  como `PRODUTO`, `APOLICE`, `ADMINISTRADORA`); o gerador valida só `NOME`
+  e `CPF_CNPJ` e ignora o resto — assim as queries não precisaram mudar.
 - Toda query usa o parâmetro **`:inivig`** (data de início de vigência).
-  O gerador troca `:inivig` por `?` (estilo do driver fdb) e passa a data
-  escolhida na tela. Cada query pode retornar colunas extras além das da
-  aba; o gerador valida os aliases obrigatórios e reordena. Se o arquivo
-  tiver o marcador `TODO`, a geração é recusada com mensagem clara.
+  O gerador remove os comentários do SQL (`_sem_comentarios`, que também
+  citam `:inivig`), troca `:inivig` por `?` e passa a data escolhida. Se o
+  arquivo tiver o marcador `TODO`, a geração é recusada com mensagem clara.
 - Com limite N e mais de uma query no produto, o limite vale para a soma:
   a segunda query só roda se ainda houver saldo.
-- O Excel é escrito com `openpyxl` em modo `write_only` (rápido e leve
-  mesmo com centenas de milhares de linhas); leitura do banco em blocos
-  de 2.000 linhas (`FETCH_BLOCO`).
-- Conexão com charset **WIN1252** (nomes/endereços têm acento).
-
-### Envio SFTP (`modulos/envio_sftp.py`)
-
-- Servidor: `sftp.portoseguro.com.br`, porta **2022**, destino
-  `/Porto/Remessa` (dados em `SFTP_CONFIG`, no `config.py`).
-- **DNS:** a rede local não resolve o hostname. O código testa o DNS e,
-  se falhar, usa o IP de fallback (`131.161.97.122`, resolvido via DNS
-  público — alias `mft.lb.portoseguro.com.br`). Se a Porto trocar o IP um
-  dia, atualizar `SFTP_FALLBACK_IP` no `.env` (resolver com
-  `nslookup sftp.portoseguro.com.br 8.8.8.8`).
-- O upload sobe como `arquivo.part`, confere o tamanho e só então renomeia
-  para o nome final — a Porto nunca vê arquivo incompleto. Qualquer falha
-  vira exceção mostrada no log da tela.
-- **Servidor "ocupado" no rename (13/11/2026):** logo após o upload, o MFT
-  da Porto ainda considera o `.part` "em andamento" e responde
-  `Resource busy. Failed to rename ... because the file is currently in
-  progress`. O arquivo está inteiro; só o nome final falta. O módulo repete
-  o rename a cada 10 s por até 3 min (`TENTATIVAS_RENAME` x `PAUSA_RENAME_S`)
-  só para esse erro (`_servidor_ocupado`); outros erros sobem na hora. Se
-  esgotar, a exceção explica que basta clicar em enviar mais tarde: ao
-  encontrar um `.part` com o **mesmo tamanho** do arquivo local, o envio
-  pula o upload e tenta só o rename; `.part` com tamanho diferente é
-  removido e o upload refeito. Testes em `tests/test_envio_sftp.py`
-  (servidor simulado, sem rede). Vale igual na versão web.
+- Leitura do banco em blocos de 2.000 linhas (`FETCH_BLOCO`); escrita com
+  `csv.writer` direto no arquivo (não há mais `openpyxl` aqui).
+- Conexão com charset **WIN1252** (nomes têm acento).
+- `gerar_planilha()` manteve o nome por compatibilidade com a tela e a web.
+- Testes: `tests/test_gerador_porto.py` (banco simulado, sem rede).
 
 ### Estado atual
 

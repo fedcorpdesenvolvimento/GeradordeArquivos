@@ -6,7 +6,7 @@ Mesmos geradores do desktop (modulos/gerador_*.py), sem tkinter:
   /funeral       GERAR ARQUIVO FUNERAL
   /dental        GERA PORTO DENTAL (duas etapas)
   /sempreodonto  GERAR DENTAL SEMPRE ODONTO (duas etapas)
-  /assistencia   PORTO ASSISTÊNCIA (xlsx; envio SFTP só com confirmação)
+  /assistencia   PORTO ASSISTÊNCIA (CSV no layout da Porto; envio SFTP só com confirmação)
   /trabalhos/{id}  acompanhamento e download
 
 Rode localmente:  uvicorn web.app:app --reload --port 8000
@@ -361,5 +361,6 @@ def baixar_arquivo(id_: str, usuario: str = Depends(auth.usuario_atual)):
     t = trabalhos.obter(id_)
     if not t or not t.arquivo or not os.path.isfile(t.arquivo):
         raise HTTPException(404, "Arquivo não disponível.")
-    return FileResponse(t.arquivo, filename=t.nome_arquivo,
-                        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    tipo = ("text/csv" if t.nome_arquivo.lower().endswith(".csv")
+            else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    return FileResponse(t.arquivo, filename=t.nome_arquivo, media_type=tipo)

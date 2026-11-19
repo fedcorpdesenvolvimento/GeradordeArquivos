@@ -8,7 +8,8 @@ o total de linhas geradas por produto. As escolhas ficam salvas em
 porto_assistencia.json e voltam preenchidas na próxima abertura.
 
 A data alimenta o parâmetro :inivig das queries e define a competência do
-nome do arquivo (relacao-envio-porto-MMYYYY.xlsx).
+nome do arquivo (relacaoenvioportoMMYYYY.csv — layout da Porto de 19/11/2026,
+ver gerador_porto.py).
 
 A geração roda em thread separada para a janela não congelar; o log chega
 por uma fila (queue) drenada pelo loop do Tk a cada 100 ms.
@@ -53,7 +54,7 @@ class JanelaPortoAssistencia(ctk.CTkToplevel):
     # ---------- montagem da tela ----------
     def _montar_tela(self):
         # pasta de destino
-        ctk.CTkLabel(self, text="Pasta onde salvar a planilha:",
+        ctk.CTkLabel(self, text="Pasta onde salvar o arquivo CSV:",
                      font=("Arial", 14, "bold")).pack(anchor="w", padx=15, pady=(15, 2))
         fr_pasta = ctk.CTkFrame(self)
         fr_pasta.pack(fill="x", padx=15)
@@ -105,7 +106,7 @@ class JanelaPortoAssistencia(ctk.CTkToplevel):
 
         # botao
         self.btn_gerar = ctk.CTkButton(
-            self, text="Gerar Planilha", command=self._iniciar_geracao,
+            self, text="Gerar Arquivo CSV", command=self._iniciar_geracao,
             fg_color="green", hover_color="darkgreen",
             font=("Arial", 14, "bold"), height=40)
         self.btn_gerar.pack(pady=12)

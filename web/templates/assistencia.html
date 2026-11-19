@@ -7,12 +7,12 @@
     <input type="date" id="data" name="data" value="{{ data }}" required>
     <label>Produtos (limite em branco = base toda)</label>
     <table>
-      <tr><th></th><th>Produto</th><th>Aba</th><th>Limite de linhas (opcional)</th></tr>
+      <tr><th></th><th>Produto</th><th>codigoPlano</th><th>Limite de linhas (opcional)</th></tr>
       {% for p in produtos %}
       <tr>
         <td><input type="checkbox" name="produto_{{ p.codigo }}" value="sim" checked></td>
         <td>Código {{ p.codigo }} - {{ p.nome }}</td>
-        <td><code>{{ p.aba }}</code></td>
+        <td><code>{{ p.codigo }}</code></td>
         <td><input type="number" name="limite_{{ p.codigo }}" min="1" style="width:120px"></td>
       </tr>
       {% endfor %}
@@ -21,7 +21,8 @@
       <label style="margin:0"><input type="checkbox" name="enviar" value="sim" id="enviar"> Enviar o arquivo ao SFTP da Porto Seguro (/Porto/Remessa) depois de gerar</label>
       <label style="margin:6px 0 0"><input type="checkbox" name="confirmo_envio" value="sim" id="confirmo"> Confirmo: tudo que cai em /Porto/Remessa pode ser processado pela seguradora.</label>
     </div>
-    <button type="submit">Gerar Relação</button>
+    <p class="aviso">Sai um único arquivo <code>relacaoenvioportoMMAAAA.csv</code> (ponto e vírgula, Windows-1252) no layout da Porto: status, codigoPlano, inicioVigencia, finalVigencia, tipoDocumento, documento, cpfCnpj, nome, nomeSocial.</p>
+    <button type="submit">Gerar Arquivo CSV</button>
   </form>
 </div>
 <script>
